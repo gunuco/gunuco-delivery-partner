@@ -1,0 +1,70 @@
+import type { ComponentProps } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+
+export type IoniconName = ComponentProps<typeof Ionicons>['name'];
+
+/**
+ * Semantic icon names → Ionicons glyph names.
+ * Use GIcon with these keys for consistent rider-app iconography.
+ */
+export const iconMap = {
+  home: 'home-outline',
+  homeFilled: 'home',
+  orders: 'receipt-outline',
+  ordersFilled: 'receipt',
+  earnings: 'wallet-outline',
+  earningsFilled: 'wallet',
+  profile: 'person-outline',
+  profileFilled: 'person',
+  online: 'radio-button-on',
+  offline: 'radio-button-off',
+  navigation: 'navigate-outline',
+  navigationFilled: 'navigate',
+  phone: 'call-outline',
+  chat: 'chatbubble-outline',
+  emergency: 'warning-outline',
+  document: 'document-text-outline',
+  vehicle: 'bicycle-outline',
+  notification: 'notifications-outline',
+  notificationFilled: 'notifications',
+  check: 'checkmark',
+  checkCircle: 'checkmark-circle',
+  close: 'close',
+  closeCircle: 'close-circle',
+  back: 'chevron-back',
+  forward: 'chevron-forward',
+  chevronRight: 'chevron-forward',
+  chevronDown: 'chevron-down',
+  chevronUp: 'chevron-up',
+  search: 'search-outline',
+  filter: 'options-outline',
+  map: 'map-outline',
+  location: 'location-outline',
+  clock: 'time-outline',
+  calendar: 'calendar-outline',
+  camera: 'camera-outline',
+  image: 'image-outline',
+  edit: 'create-outline',
+  trash: 'trash-outline',
+  plus: 'add',
+  minus: 'remove',
+  info: 'information-circle-outline',
+  help: 'help-circle-outline',
+  settings: 'settings-outline',
+  logout: 'log-out-outline',
+  refresh: 'refresh-outline',
+  star: 'star-outline',
+  starFilled: 'star',
+  package: 'cube-outline',
+  cake: 'cafe-outline',
+  distance: 'trail-sign-outline',
+  money: 'cash-outline',
+  shield: 'shield-checkmark-outline',
+  alert: 'alert-circle-outline',
+  eye: 'eye-outline',
+  eyeOff: 'eye-off-outline',
+  menu: 'menu-outline',
+  more: 'ellipsis-horizontal',
+} as const satisfies Record<string, IoniconName>;
+
+export type IconName = keyof typeof iconMap;

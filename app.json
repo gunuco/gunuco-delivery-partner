@@ -1,0 +1,77 @@
+{
+  "expo": {
+    "name": "GUNUCO Delivery Partner",
+    "slug": "gunuco-delivery-partner",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "gunuco-partner",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.gunuco.deliverypartner",
+      "infoPlist": {
+        "NSCameraUsageDescription": "GUNUCO needs camera access to capture your profile photo and verification documents.",
+        "NSPhotoLibraryUsageDescription": "GUNUCO needs photo library access to upload your profile photo and documents.",
+        "NSLocationWhenInUseUsageDescription": "GUNUCO needs your location while online to assign nearby cake deliveries and guide you to pickup and drop points.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "GUNUCO needs your location while online to assign nearby cake deliveries and guide you to pickup and drop points."
+      }
+    },
+    "android": {
+      "package": "com.gunuco.deliverypartner",
+      "adaptiveIcon": {
+        "backgroundColor": "#5C3A21",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "READ_MEDIA_IMAGES"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#5C3A21"
+        }
+      ],
+      "expo-secure-store",
+      "expo-image",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow GUNUCO Delivery Partner to use your location for live deliveries."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow GUNUCO Delivery Partner to access your photos for profile and document uploads.",
+          "cameraPermission": "Allow GUNUCO Delivery Partner to use your camera for profile and document uploads."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "EXPO_PUBLIC_DATA_MODE": "mock",
+      "EXPO_PUBLIC_UI_TEST_MODE": "true",
+      "EXPO_PUBLIC_UI_TEST_SCENARIO": "default",
+      "EXPO_PUBLIC_APP_ENV": "development"
+    }
+  }
+}
