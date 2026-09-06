@@ -36,6 +36,8 @@ Local and internal builds default to **mock** data so UI work does not need a li
 
 **Mock OTP:** `482916` (any phone number in mock auth).
 
+**In-app scenarios:** Settings → **UI Test Scenarios** lists and applies every mock scenario without restarting Metro.
+
 **Production guard:** when `EXPO_PUBLIC_APP_ENV=production`, the app **forces** `dataMode=api` and `uiTestMode=false` regardless of other env vars. See [docs/environment.md](docs/environment.md).
 
 Scenario list and workflow notes: [docs/mock-mode.md](docs/mock-mode.md).

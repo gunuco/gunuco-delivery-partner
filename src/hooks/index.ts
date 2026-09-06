@@ -19,3 +19,4 @@ export { useOnboarding } from './useOnboarding';
 export { useNetworkStatus } from './useNetworkStatus';
 export { usePendingActions } from './usePendingActions';
 export type { PendingAction, PendingActionKind } from './usePendingActions';
+export { useUiTestScenarios } from './useUiTestScenarios';

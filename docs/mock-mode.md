@@ -53,6 +53,14 @@ Set `EXPO_PUBLIC_UI_TEST_SCENARIO` to one of:
 
 `native-test` EAS profile seeds `new-order` for assignment UI checks.
 
+## In-app scenario picker
+
+With `EXPO_PUBLIC_UI_TEST_MODE=true` and `DATA_MODE=mock` (non-production):
+
+**Settings → UI Test Scenarios** lists every scenario above.
+
+Tap a row to reseed the mock store, reset RTK Query cache, and navigate into that state (e.g. `new-order` → assignment screen). No need to restart Metro or change `.env` for each scenario.
+
 ## Do not
 
 - Branch screens on `uiTestMode` or scenario name.

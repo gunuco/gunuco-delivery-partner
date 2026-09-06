@@ -9,11 +9,16 @@ import {
   GListRow,
   theme,
 } from '@/src/design-system';
+import { appConfig } from '@/src/config/env';
 import { useAuth } from '@/src/hooks';
+import { useUiTestScenarios } from '@/src/hooks/useUiTestScenarios';
 
 export default function SettingsIndexScreen() {
   const { logout, logoutState } = useAuth();
+  const { isAvailable, activeId } = useUiTestScenarios();
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const showScenarios =
+    isAvailable || (!appConfig.isProduction && appConfig.uiTestMode);
 
   return (
     <View style={styles.screen}>
@@ -57,6 +62,19 @@ export default function SettingsIndexScreen() {
           showChevron
           onPress={() => router.push('/settings/about')}
         />
+        {showScenarios ? (
+          <GListRow
+            title="UI Test Scenarios"
+            subtitle={
+              activeId
+                ? `Mock QA · active: ${activeId}`
+                : 'Browse and apply all mock scenarios'
+            }
+            left={<GIcon name="settings" size={22} color={theme.colors.accent} />}
+            showChevron
+            onPress={() => router.push('/settings/scenarios')}
+          />
+        ) : null}
         <GListRow
           title="Log out"
           subtitle="Sign out of this device"

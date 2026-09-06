@@ -4,6 +4,7 @@
  */
 export {
   applyUiTestScenario,
+  getActiveScenarioName,
   reseedScenario,
 } from '@/src/repositories/mock/scenarioSeeder';
 export {
@@ -19,6 +20,7 @@ export {
   getScenarioSeed,
   isUiTestScenario,
   SCENARIO_DEFAULTS,
+  UI_TEST_SCENARIO_LIST,
   type ScenarioSeed,
   type UiTestScenario,
 } from '@/src/config/scenarios';

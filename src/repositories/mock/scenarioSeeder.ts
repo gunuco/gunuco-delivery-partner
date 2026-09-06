@@ -56,8 +56,14 @@ function onboardingForStatus(status: PartnerStatus) {
   return createSeedOnboarding();
 }
 
-function applyScenarioSeed(scenario: UiTestScenario, seed: ScenarioSeed): void {
-  const loggedIn = scenario !== 'onboarding';
+function applyScenarioSeed(
+  scenario: UiTestScenario,
+  seed: ScenarioSeed,
+  options?: { forceLoggedIn?: boolean },
+): void {
+  // In-app QA switcher keeps a session so gated onboarding/status screens are reachable.
+  const loggedIn =
+    options?.forceLoggedIn === true ? true : scenario !== 'onboarding';
   const bundle = createFullSeed({
     loggedIn,
     partnerOverrides: {
@@ -163,21 +169,37 @@ function applyScenarioSeed(scenario: UiTestScenario, seed: ScenarioSeed): void {
   });
 }
 
+export type ApplyScenarioOptions = {
+  /** Keep SecureStore-ready mock session even for onboarding scenarios (in-app QA). */
+  forceLoggedIn?: boolean;
+};
+
 /**
  * Reads appConfig.uiTestScenario (or default) and resets the mock store.
  * Call once when creating mock repositories.
  */
-export function applyUiTestScenario(scenarioName?: string): ScenarioSeed {
+export function applyUiTestScenario(
+  scenarioName?: string,
+  options?: ApplyScenarioOptions,
+): ScenarioSeed {
   const raw =
     scenarioName ??
     (appConfig.uiTestMode ? appConfig.uiTestScenario : 'default') ??
     'default';
   const scenario: UiTestScenario = isUiTestScenario(raw) ? raw : 'default';
   const seed = getScenarioSeed(scenario);
-  applyScenarioSeed(scenario, seed);
+  applyScenarioSeed(scenario, seed, options);
   return seed;
 }
 
-export function reseedScenario(scenario: string): ScenarioSeed {
-  return applyUiTestScenario(scenario);
+export function reseedScenario(
+  scenario: string,
+  options?: ApplyScenarioOptions,
+): ScenarioSeed {
+  return applyUiTestScenario(scenario, options);
+}
+
+/** Current scenario id stored on the mock store (empty when not mock). */
+export function getActiveScenarioName(): string {
+  return mockStore.getState().activeScenario;
 }

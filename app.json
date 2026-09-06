@@ -71,7 +71,12 @@
       "EXPO_PUBLIC_DATA_MODE": "mock",
       "EXPO_PUBLIC_UI_TEST_MODE": "true",
       "EXPO_PUBLIC_UI_TEST_SCENARIO": "default",
-      "EXPO_PUBLIC_APP_ENV": "development"
+      "EXPO_PUBLIC_APP_ENV": "development",
+      "EXPO_PUBLIC_API_BASE_URL": "",
+      "router": {},
+      "eas": {
+        "projectId": "1677d0cd-e8cd-4c8c-9a14-34040928d36c"
+      }
     }
   }
 }

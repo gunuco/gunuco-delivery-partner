@@ -3,6 +3,7 @@ export { mockStore } from './MockStore';
 export type { MockStore, MockStoreState, PendingOtp } from './MockStore';
 export {
   applyUiTestScenario,
+  getActiveScenarioName,
   reseedScenario,
 } from './scenarioSeeder';
 export {

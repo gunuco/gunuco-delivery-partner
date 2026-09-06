@@ -316,3 +316,14 @@ export function getScenarioSeed(scenario: string): ScenarioSeed {
   }
   return SCENARIO_DEFAULTS.default;
 }
+
+/** Ordered list for in-app QA scenario picker. */
+export const UI_TEST_SCENARIO_LIST: ReadonlyArray<{
+  id: UiTestScenario;
+  title: string;
+  description: string;
+}> = (Object.keys(SCENARIO_DEFAULTS) as UiTestScenario[]).map((id) => ({
+  id,
+  title: id,
+  description: SCENARIO_DEFAULTS[id].description,
+}));
