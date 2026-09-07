@@ -1,6 +1,6 @@
 /** Local relative requires — Metro resolves these reliably (aliases do not). */
 export const onboardingBannerSources = {
-  hub: require('./banner-hub.png'),
+  hub: require('./banner-hub.jpg'),
   personal: require('./banner-personal.jpg'),
   photo: require('./banner-photo.jpg'),
   location: require('./banner-location.jpg'),
