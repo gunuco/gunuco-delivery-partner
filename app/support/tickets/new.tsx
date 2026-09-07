@@ -4,6 +4,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   View,
@@ -11,14 +12,15 @@ import {
 
 import {
   GButton,
-  GChip,
-  GHeader,
   GInput,
-  GSectionHeader,
   GText,
   theme,
   useToast,
 } from '@/src/design-system';
+import {
+  ProfileHeroCard,
+  ProfileScreenShell,
+} from '@/src/features/profile/ProfileScreenShell';
 import { useSupport } from '@/src/hooks';
 import type { TicketCategory } from '@/src/types';
 import { getErrorMessage } from '@/src/utils/errors';
@@ -56,28 +58,56 @@ export default function NewSupportTicketScreen() {
   };
 
   return (
-    <View style={styles.screen}>
-      <GHeader
-        title="New ticket"
-        subtitle="Tell us what happened"
-        showBack
-        onBack={() => router.back()}
-      />
+    <ProfileScreenShell
+      title="New ticket"
+      subtitle="Tell us what happened"
+      onBack={() => router.back()}
+      scroll={false}
+      contentStyle={styles.bodyPad}
+    >
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView contentContainerStyle={styles.content}>
-          <GSectionHeader title="Category" />
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <ProfileHeroCard
+            icon="plus"
+            eyebrow="Support"
+            title="Raise a ticket"
+            body="GUNUCO support typically replies within a few minutes during peak hours."
+          />
+
+          <GText variant="bodyBold">Category</GText>
           <View style={styles.chips}>
-            {CATEGORIES.map((item) => (
-              <GChip
-                key={item}
-                label={TICKET_CATEGORY_LABELS[item]}
-                selected={category === item}
-                onPress={() => setCategory(item)}
-              />
-            ))}
+            {CATEGORIES.map((item) => {
+              const selected = category === item;
+              return (
+                <Pressable
+                  key={item}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  onPress={() => setCategory(item)}
+                  style={[
+                    styles.chip,
+                    selected ? styles.chipSelected : styles.chipIdle,
+                  ]}
+                >
+                  <GText
+                    variant="caption"
+                    color={
+                      selected ? theme.colors.textInverse : theme.colors.text
+                    }
+                    style={styles.chipLabel}
+                  >
+                    {TICKET_CATEGORY_LABELS[item]}
+                  </GText>
+                </Pressable>
+              );
+            })}
           </View>
 
           <GInput
@@ -104,11 +134,6 @@ export default function NewSupportTicketScreen() {
             autoCapitalize="none"
           />
 
-          <GText variant="caption" color={theme.colors.textMuted}>
-            GUNUCO support typically replies within a few minutes during peak
-            hours.
-          </GText>
-
           <GButton
             title="Submit ticket"
             fullWidth
@@ -121,20 +146,19 @@ export default function NewSupportTicketScreen() {
           />
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+    </ProfileScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
+  bodyPad: {
+    paddingHorizontal: 0,
   },
   flex: {
     flex: 1,
   },
   content: {
-    padding: theme.spacing[4],
+    paddingHorizontal: theme.spacing[4],
     gap: theme.spacing[3],
     paddingBottom: theme.spacing[10],
   },
@@ -142,6 +166,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: theme.spacing[2],
+  },
+  chip: {
+    minHeight: 36,
+    paddingHorizontal: theme.spacing[3],
+    borderRadius: theme.radius.full,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chipSelected: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  chipIdle: {
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.borderStrong,
+  },
+  chipLabel: {
+    fontWeight: '600',
   },
   multiline: {
     minHeight: 120,

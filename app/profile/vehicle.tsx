@@ -1,14 +1,17 @@
 import { router } from 'expo-router';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import {
-  GEmptyState,
   GErrorState,
-  GHeader,
-  GListRow,
   GSkeleton,
   theme,
 } from '@/src/design-system';
+import {
+  ProfileDetailRow,
+  ProfileHeroCard,
+  ProfileScreenShell,
+  PROFILE_BG,
+} from '@/src/features/profile/ProfileScreenShell';
 import { useVehicle } from '@/src/hooks';
 import { getErrorMessage } from '@/src/utils/errors';
 import { formatEnumLabel, VEHICLE_TYPE_LABELS } from '@/src/utils/labels';
@@ -18,94 +21,97 @@ export default function VehicleScreen() {
 
   if (isLoading && !vehicle) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="Vehicle" showBack onBack={() => router.back()} />
-        <View style={styles.pad}>
-          <GSkeleton height={56} borderRadius={theme.radius.md} />
-          <GSkeleton height={56} borderRadius={theme.radius.md} />
-        </View>
-      </View>
+      <ProfileScreenShell
+        title="Vehicle"
+        subtitle="Registered for deliveries"
+        onBack={() => router.back()}
+      >
+        <GSkeleton height={96} borderRadius={theme.radius.xl} />
+        <GSkeleton height={72} borderRadius={theme.radius.xl} />
+      </ProfileScreenShell>
     );
   }
 
   if (error && !vehicle) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="Vehicle" showBack onBack={() => router.back()} />
-        <GErrorState
-          title="Couldn’t load vehicle"
-          description={getErrorMessage(error)}
-          onRetry={() => {
-            void refetch();
-          }}
-        />
+      <View style={styles.fallback}>
+        <ProfileScreenShell title="Vehicle" onBack={() => router.back()}>
+          <GErrorState
+            title="Couldn’t load vehicle"
+            description={getErrorMessage(error)}
+            onRetry={() => {
+              void refetch();
+            }}
+          />
+        </ProfileScreenShell>
       </View>
     );
   }
 
   if (!vehicle) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="Vehicle" showBack onBack={() => router.back()} />
-        <GEmptyState
+      <ProfileScreenShell
+        title="Vehicle"
+        subtitle="Registered for deliveries"
+        onBack={() => router.back()}
+      >
+        <ProfileHeroCard
+          icon="vehicle"
+          eyebrow="Fleet"
           title="No vehicle on file"
-          description="Add your scooter or bike details to stay eligible for cake deliveries."
+          body="Add your scooter or bike details to stay eligible for cake deliveries."
         />
-      </View>
+      </ProfileScreenShell>
     );
   }
 
   return (
-    <View style={styles.screen}>
-      <GHeader
-        title="Vehicle"
-        subtitle="Registered for deliveries"
-        showBack
-        onBack={() => router.back()}
+    <ProfileScreenShell
+      title="Vehicle"
+      subtitle="Registered for deliveries"
+      onBack={() => router.back()}
+      refreshing={isFetching && !isLoading}
+      onRefresh={() => {
+        void refetch();
+      }}
+    >
+      <ProfileHeroCard
+        icon="vehicle"
+        eyebrow="On-road"
+        title={`${vehicle.make} ${vehicle.model}`}
+        body={vehicle.number}
       />
-      <ScrollView
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={isFetching && !isLoading}
-            onRefresh={() => {
-              void refetch();
-            }}
-            tintColor={theme.colors.primary}
-          />
-        }
-      >
-        <GListRow
-          title="Type"
-          subtitle={VEHICLE_TYPE_LABELS[vehicle.type] ?? vehicle.type}
-        />
-        <GListRow title="Make" subtitle={vehicle.make} />
-        <GListRow title="Model" subtitle={vehicle.model} />
-        <GListRow title="Number" subtitle={vehicle.number} />
-        <GListRow title="Color" subtitle={vehicle.color ?? '—'} />
-        <GListRow
-          title="Ownership"
-          subtitle={formatEnumLabel(vehicle.ownership)}
-        />
-        <GListRow
-          title="Year"
-          subtitle={vehicle.year ? String(vehicle.year) : '—'}
-        />
-      </ScrollView>
-    </View>
+
+      <ProfileDetailRow
+        icon="vehicle"
+        label="Type"
+        value={VEHICLE_TYPE_LABELS[vehicle.type] ?? vehicle.type}
+      />
+      <ProfileDetailRow icon="store" label="Make" value={vehicle.make} />
+      <ProfileDetailRow icon="list" label="Model" value={vehicle.model} />
+      <ProfileDetailRow icon="scan" label="Number" value={vehicle.number} />
+      <ProfileDetailRow
+        icon="colorPalette"
+        label="Color"
+        value={vehicle.color ?? '—'}
+      />
+      <ProfileDetailRow
+        icon="key"
+        label="Ownership"
+        value={formatEnumLabel(vehicle.ownership)}
+      />
+      <ProfileDetailRow
+        icon="calendar"
+        label="Year"
+        value={vehicle.year ? String(vehicle.year) : '—'}
+      />
+    </ProfileScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  fallback: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  pad: {
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
-  },
-  content: {
-    paddingBottom: theme.spacing[8],
+    backgroundColor: PROFILE_BG,
   },
 });

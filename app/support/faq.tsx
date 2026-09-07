@@ -1,17 +1,19 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import {
-  GCard,
-  GChip,
   GEmptyState,
   GErrorState,
-  GHeader,
   GSkeleton,
   GText,
   theme,
 } from '@/src/design-system';
+import {
+  ProfileHeroCard,
+  ProfileScreenShell,
+  PROFILE_BG,
+} from '@/src/features/profile/ProfileScreenShell';
 import { useSupport } from '@/src/hooks';
 import { getErrorMessage } from '@/src/utils/errors';
 
@@ -31,112 +33,134 @@ export default function SupportFaqScreen() {
 
   if (isLoading && faqs.length === 0) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="FAQs" showBack onBack={() => router.back()} />
-        <View style={styles.pad}>
-          <GSkeleton height={100} borderRadius={theme.radius.lg} />
-          <GSkeleton height={100} borderRadius={theme.radius.lg} />
-        </View>
-      </View>
+      <ProfileScreenShell
+        title="Frequently asked"
+        subtitle="Quick answers for partners"
+        onBack={() => router.back()}
+      >
+        <GSkeleton height={100} borderRadius={theme.radius.xl} />
+        <GSkeleton height={100} borderRadius={theme.radius.xl} />
+      </ProfileScreenShell>
     );
   }
 
   if (error && faqs.length === 0) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="FAQs" showBack onBack={() => router.back()} />
-        <GErrorState
-          title="Couldn’t load FAQs"
-          description={getErrorMessage(error)}
-          onRetry={() => {
-            void refetch();
-          }}
-        />
+      <View style={styles.fallback}>
+        <ProfileScreenShell title="FAQs" onBack={() => router.back()}>
+          <GErrorState
+            title="Couldn’t load FAQs"
+            description={getErrorMessage(error)}
+            onRetry={() => {
+              void refetch();
+            }}
+          />
+        </ProfileScreenShell>
       </View>
     );
   }
 
   return (
-    <View style={styles.screen}>
-      <GHeader
-        title="Frequently asked"
-        subtitle="Quick answers for partners"
-        showBack
-        onBack={() => router.back()}
+    <ProfileScreenShell
+      title="Frequently asked"
+      subtitle="Quick answers for partners"
+      onBack={() => router.back()}
+      refreshing={isFetching && !isLoading}
+      onRefresh={() => {
+        void refetch();
+      }}
+    >
+      <ProfileHeroCard
+        icon="help"
+        eyebrow="Help centre"
+        title="Partner FAQs"
+        body="Cake handling, OTP, payouts, and on-road safety answers."
       />
-      <ScrollView
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={isFetching && !isLoading}
-            onRefresh={() => {
-              void refetch();
-            }}
-            tintColor={theme.colors.primary}
-          />
-        }
-      >
-        <View style={styles.chips}>
-          <GChip
-            label="All"
-            selected={category === 'ALL'}
-            onPress={() => setCategory('ALL')}
-          />
-          {categories.map((item) => (
-            <GChip
-              key={item}
-              label={item}
-              selected={category === item}
-              onPress={() => setCategory(item)}
-            />
-          ))}
-        </View>
 
-        {filtered.length === 0 ? (
-          <GEmptyState
-            title="No FAQs"
-            description="Check back soon or raise a support ticket."
-            actionLabel="New ticket"
-            onAction={() => router.push('/support/tickets/new')}
-          />
-        ) : (
-          filtered.map((faq) => (
-            <GCard key={faq.id} padding="md" style={styles.card}>
-              <GText variant="label" color={theme.colors.textMuted}>
-                {faq.category}
+      <View style={styles.chips}>
+        {(['ALL', ...categories] as string[]).map((item) => {
+          const selected = category === item;
+          return (
+            <Pressable
+              key={item}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              onPress={() => setCategory(item)}
+              style={[
+                styles.chip,
+                selected ? styles.chipSelected : styles.chipIdle,
+              ]}
+            >
+              <GText
+                variant="caption"
+                color={selected ? theme.colors.textInverse : theme.colors.text}
+                style={styles.chipLabel}
+              >
+                {item === 'ALL' ? 'All' : item}
               </GText>
-              <GText variant="bodyBold">{faq.question}</GText>
-              <GText variant="body" color={theme.colors.textSecondary}>
-                {faq.answer}
-              </GText>
-            </GCard>
-          ))
-        )}
-      </ScrollView>
-    </View>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {filtered.length === 0 ? (
+        <GEmptyState
+          title="No FAQs"
+          description="Check back soon or raise a support ticket."
+          actionLabel="New ticket"
+          onAction={() => router.push('/support/tickets/new')}
+        />
+      ) : (
+        filtered.map((faq) => (
+          <View key={faq.id} style={styles.card}>
+            <GText variant="label" color={theme.colors.textMuted}>
+              {faq.category}
+            </GText>
+            <GText variant="bodyBold">{faq.question}</GText>
+            <GText variant="body" color={theme.colors.textSecondary}>
+              {faq.answer}
+            </GText>
+          </View>
+        ))
+      )}
+    </ProfileScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  fallback: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  pad: {
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
-  },
-  content: {
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
-    paddingBottom: theme.spacing[8],
+    backgroundColor: PROFILE_BG,
   },
   chips: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: theme.spacing[2],
   },
+  chip: {
+    minHeight: 36,
+    paddingHorizontal: theme.spacing[3],
+    borderRadius: theme.radius.full,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chipSelected: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  chipIdle: {
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.borderStrong,
+  },
+  chipLabel: {
+    fontWeight: '600',
+  },
   card: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.xl,
+    padding: theme.spacing[3],
     gap: theme.spacing[2],
+    ...theme.shadows.sm,
   },
 });

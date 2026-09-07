@@ -20,6 +20,7 @@ export const components = {
     md: 40,
     lg: 56,
     xl: 72,
+    xxl: 96,
   },
 } as const;
 

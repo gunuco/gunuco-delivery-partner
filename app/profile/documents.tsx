@@ -1,14 +1,18 @@
 import { router } from 'expo-router';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import {
-  GDocumentCard,
   GEmptyState,
   GErrorState,
-  GHeader,
+  GDocumentCard,
   GSkeleton,
   theme,
 } from '@/src/design-system';
+import {
+  ProfileHeroCard,
+  ProfileScreenShell,
+  PROFILE_BG,
+} from '@/src/features/profile/ProfileScreenShell';
 import { useDocuments } from '@/src/hooks';
 import { formatDate } from '@/src/utils/date';
 import { getErrorMessage } from '@/src/utils/errors';
@@ -19,85 +23,73 @@ export default function DocumentsScreen() {
 
   if (isLoading && documents.length === 0) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="Documents" showBack onBack={() => router.back()} />
-        <View style={styles.pad}>
-          <GSkeleton height={72} borderRadius={theme.radius.lg} />
-          <GSkeleton height={72} borderRadius={theme.radius.lg} />
-        </View>
-      </View>
+      <ProfileScreenShell
+        title="Documents"
+        subtitle="Keep verification up to date"
+        onBack={() => router.back()}
+      >
+        <GSkeleton height={88} borderRadius={theme.radius.xl} />
+        <GSkeleton height={88} borderRadius={theme.radius.xl} />
+      </ProfileScreenShell>
     );
   }
 
   if (error && documents.length === 0) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="Documents" showBack onBack={() => router.back()} />
-        <GErrorState
-          title="Couldn’t load documents"
-          description={getErrorMessage(error)}
-          onRetry={() => {
-            void refetch();
-          }}
-        />
+      <View style={styles.fallback}>
+        <ProfileScreenShell title="Documents" onBack={() => router.back()}>
+          <GErrorState
+            title="Couldn’t load documents"
+            description={getErrorMessage(error)}
+            onRetry={() => {
+              void refetch();
+            }}
+          />
+        </ProfileScreenShell>
       </View>
     );
   }
 
   return (
-    <View style={styles.screen}>
-      <GHeader
-        title="Documents"
-        subtitle="Keep verification up to date"
-        showBack
-        onBack={() => router.back()}
+    <ProfileScreenShell
+      title="Documents"
+      subtitle="Keep verification up to date"
+      onBack={() => router.back()}
+      refreshing={isFetching && !isLoading}
+      onRefresh={() => {
+        void refetch();
+      }}
+    >
+      <ProfileHeroCard
+        icon="document"
+        eyebrow="Verification"
+        title="Your partner documents"
+        body="Licence, RC and identity papers keep you eligible for cake deliveries."
       />
-      <ScrollView
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={isFetching && !isLoading}
-            onRefresh={() => {
-              void refetch();
-            }}
-            tintColor={theme.colors.primary}
+
+      {documents.length === 0 ? (
+        <GEmptyState
+          title="No documents"
+          description="Upload your licence and RC to stay eligible for deliveries."
+        />
+      ) : (
+        documents.map((doc) => (
+          <GDocumentCard
+            key={doc.id}
+            type={DOCUMENT_TYPE_LABELS[doc.type] ?? doc.type}
+            status={doc.status}
+            expiry={doc.expiryDate ? formatDate(doc.expiryDate) : undefined}
+            onPress={() => router.push(`/profile/documents/${doc.type}`)}
           />
-        }
-      >
-        {documents.length === 0 ? (
-          <GEmptyState
-            title="No documents"
-            description="Upload your licence and RC to stay eligible for deliveries."
-          />
-        ) : (
-          documents.map((doc) => (
-            <GDocumentCard
-              key={doc.id}
-              type={DOCUMENT_TYPE_LABELS[doc.type] ?? doc.type}
-              status={doc.status}
-              expiry={doc.expiryDate ? formatDate(doc.expiryDate) : undefined}
-              onPress={() => router.push(`/profile/documents/${doc.type}`)}
-            />
-          ))
-        )}
-      </ScrollView>
-    </View>
+        ))
+      )}
+    </ProfileScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  fallback: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  pad: {
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
-  },
-  content: {
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
-    paddingBottom: theme.spacing[8],
-    flexGrow: 1,
+    backgroundColor: PROFILE_BG,
   },
 });

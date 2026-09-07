@@ -1,19 +1,22 @@
 import { router } from 'expo-router';
-import { Alert, RefreshControl, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { Alert, Share, StyleSheet, View } from 'react-native';
 
 import {
   GBadge,
   GButton,
-  GCard,
   GEmptyState,
   GErrorState,
-  GHeader,
-  GListRow,
+  GIcon,
   GSkeleton,
   GStatCard,
   GText,
   theme,
 } from '@/src/design-system';
+import {
+  ProfileHeroCard,
+  ProfileScreenShell,
+  PROFILE_BG,
+} from '@/src/features/profile/ProfileScreenShell';
 import { useReferral } from '@/src/hooks';
 import { formatRelativeTime } from '@/src/utils/date';
 import { getErrorMessage } from '@/src/utils/errors';
@@ -25,158 +28,178 @@ export default function ReferralScreen() {
 
   if (isLoading && !referral) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="Refer & earn" showBack onBack={() => router.back()} />
-        <View style={styles.pad}>
-          <GSkeleton height={120} borderRadius={theme.radius.lg} />
-          <GSkeleton height={88} borderRadius={theme.radius.lg} />
-        </View>
-      </View>
+      <ProfileScreenShell
+        title="Refer & earn"
+        subtitle="Invite partners to GUNUCO"
+        onBack={() => router.back()}
+      >
+        <GSkeleton height={140} borderRadius={theme.radius.xl} />
+        <GSkeleton height={88} borderRadius={theme.radius.xl} />
+      </ProfileScreenShell>
     );
   }
 
   if (error && !referral) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="Refer & earn" showBack onBack={() => router.back()} />
-        <GErrorState
-          title="Couldn’t load referral"
-          description={getErrorMessage(error)}
-          onRetry={() => {
-            void refetch();
-          }}
-        />
+      <View style={styles.fallback}>
+        <ProfileScreenShell title="Refer & earn" onBack={() => router.back()}>
+          <GErrorState
+            title="Couldn’t load referral"
+            description={getErrorMessage(error)}
+            onRetry={() => {
+              void refetch();
+            }}
+          />
+        </ProfileScreenShell>
       </View>
     );
   }
 
   return (
-    <View style={styles.screen}>
-      <GHeader
-        title="Refer & earn"
-        subtitle="Invite partners to GUNUCO"
-        showBack
-        onBack={() => router.back()}
-      />
-      <ScrollView
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={isFetching && !isLoading}
-            onRefresh={() => {
-              void refetch();
-            }}
-            tintColor={theme.colors.primary}
-          />
-        }
+    <ProfileScreenShell
+      title="Refer & earn"
+      subtitle="Invite partners to GUNUCO"
+      onBack={() => router.back()}
+      refreshing={isFetching && !isLoading}
+      onRefresh={() => {
+        void refetch();
+      }}
+    >
+      <ProfileHeroCard
+        tone="primary"
+        icon="genderOther"
+        eyebrow="Your code"
+        title={referral?.code ?? '—'}
+        body="Friends join with this code. You earn when they complete onboarding deliveries."
       >
-        <GCard padding="lg" style={styles.hero}>
-          <GText variant="label" color={theme.colors.textSecondary}>
-            Your code
-          </GText>
-          <GText variant="display">{referral?.code ?? '—'}</GText>
-          <GText variant="caption" color={theme.colors.textMuted}>
-            Friends join with this code. You earn when they complete onboarding
-            deliveries.
-          </GText>
-          <GButton
-            title="Share code"
-            fullWidth
-            onPress={() => {
-              void (async () => {
-                try {
-                  await Share.share({
-                    message: `Join GUNUCO Delivery Partner with my code ${referral?.code ?? ''}. Deliver celebration cakes across Hyderabad!`,
-                  });
-                } catch (err) {
-                  Alert.alert('Share failed', getErrorMessage(err));
-                }
-              })();
-            }}
-          />
-        </GCard>
-
-        <View style={styles.row}>
-          <GStatCard
-            label="Invited"
-            value={String(referral?.invitedCount ?? 0)}
-          />
-          <GStatCard
-            label="Rewarded"
-            value={String(referral?.rewardedCount ?? 0)}
-          />
-        </View>
-        <GStatCard
-          label="Total earned"
-          value={formatPaise(referral?.totalRewardPaise ?? 0)}
-        />
-
-        <GText variant="title" style={styles.section}>
-          History
-        </GText>
-        {history.length === 0 ? (
-          <GEmptyState
-            title="No referrals yet"
-            description="Share your code with riders who want to deliver with GUNUCO."
-          />
-        ) : (
-          history.map((entry) => (
-            <GListRow
-              key={entry.id}
-              title={entry.inviteeName}
-              subtitle={formatRelativeTime(entry.createdAt)}
-              right={
-                <View style={styles.right}>
-                  <GBadge
-                    label={entry.status}
-                    tone={
-                      entry.status === 'REWARDED'
-                        ? 'success'
-                        : entry.status === 'JOINED'
-                          ? 'info'
-                          : 'warning'
-                    }
-                  />
-                  {typeof entry.rewardPaise === 'number' ? (
-                    <GText variant="caption">
-                      {formatPaise(entry.rewardPaise)}
-                    </GText>
-                  ) : null}
-                </View>
+        <GButton
+          title="Share code"
+          fullWidth
+          variant="secondary"
+          onPress={() => {
+            void (async () => {
+              try {
+                await Share.share({
+                  message: `Join GUNUCO Delivery Partner with my code ${referral?.code ?? ''}. Deliver celebration cakes across Hyderabad!`,
+                });
+              } catch (err) {
+                Alert.alert('Share failed', getErrorMessage(err));
               }
-            />
-          ))
-        )}
-      </ScrollView>
-    </View>
+            })();
+          }}
+        />
+      </ProfileHeroCard>
+
+      <View style={styles.stats}>
+        <GStatCard
+          label="Invited"
+          value={String(referral?.invitedCount ?? 0)}
+          icon={
+            <View style={styles.statIcon}>
+              <GIcon name="genderOther" size={16} color={theme.colors.primary} />
+            </View>
+          }
+        />
+        <GStatCard
+          label="Rewarded"
+          value={String(referral?.rewardedCount ?? 0)}
+          icon={
+            <View style={styles.statIcon}>
+              <GIcon name="gift" size={16} color={theme.colors.primary} />
+            </View>
+          }
+        />
+      </View>
+      <GStatCard
+        label="Total earned"
+        value={formatPaise(referral?.totalRewardPaise ?? 0)}
+        icon={
+          <View style={styles.statIcon}>
+            <GIcon name="money" size={16} color={theme.colors.primary} />
+          </View>
+        }
+      />
+
+      <GText variant="bodyBold" style={styles.section}>
+        History
+      </GText>
+
+      {history.length === 0 ? (
+        <GEmptyState
+          title="No referrals yet"
+          description="Share your code with riders who want to deliver with GUNUCO."
+        />
+      ) : (
+        history.map((entry) => (
+          <View key={entry.id} style={styles.historyRow}>
+            <View style={styles.statIcon}>
+              <GIcon name="profile" size={18} color={theme.colors.primary} />
+            </View>
+            <View style={styles.historyCopy}>
+              <GText variant="bodyBold">{entry.inviteeName}</GText>
+              <GText variant="caption" color={theme.colors.textSecondary}>
+                {formatRelativeTime(entry.createdAt)}
+              </GText>
+            </View>
+            <View style={styles.historyRight}>
+              <GBadge
+                label={entry.status}
+                tone={
+                  entry.status === 'REWARDED'
+                    ? 'success'
+                    : entry.status === 'JOINED'
+                      ? 'info'
+                      : 'warning'
+                }
+              />
+              {typeof entry.rewardPaise === 'number' ? (
+                <GText variant="caption" color={theme.colors.success}>
+                  {formatPaise(entry.rewardPaise)}
+                </GText>
+              ) : null}
+            </View>
+          </View>
+        ))
+      )}
+    </ProfileScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  fallback: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: PROFILE_BG,
   },
-  pad: {
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
-  },
-  content: {
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
-    paddingBottom: theme.spacing[8],
-  },
-  hero: {
-    gap: theme.spacing[2],
-  },
-  row: {
+  stats: {
     flexDirection: 'row',
     gap: theme.spacing[3],
   },
-  section: {
-    marginTop: theme.spacing[2],
+  statIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  right: {
+  section: {
+    marginTop: theme.spacing[1],
+  },
+  historyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing[3],
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.xl,
+    padding: theme.spacing[3],
+    ...theme.shadows.sm,
+  },
+  historyCopy: {
+    flex: 1,
+    gap: 2,
+    minWidth: 0,
+  },
+  historyRight: {
     alignItems: 'flex-end',
     gap: 4,
   },

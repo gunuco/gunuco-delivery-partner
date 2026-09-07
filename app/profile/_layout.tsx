@@ -1,13 +1,13 @@
 import { Stack } from 'expo-router';
 
-import { theme } from '@/src/design-system';
+const PROFILE_BG = '#FFF8FA';
 
 export default function ProfileStackLayout() {
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: theme.colors.background },
+        contentStyle: { backgroundColor: PROFILE_BG },
       }}
     />
   );

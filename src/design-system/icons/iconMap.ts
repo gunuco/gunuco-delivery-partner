@@ -34,6 +34,7 @@ export const iconMap = {
   gift: 'gift-outline',
   scooter: 'bicycle',
   chart: 'bar-chart-outline',
+  infinity: 'infinite-outline',
   list: 'list-outline',
   rupee: 'cash-outline',
   check: 'checkmark',

@@ -1,7 +1,7 @@
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 
-import { brandImageSources } from '../../../assets/images/brand/sources';
 import { GAvatar, GIcon, GText, theme } from '@/src/design-system';
+import { brandImageSources } from '../../../assets/images/brand/sources';
 
 import { getTimeGreeting } from './greeting';
 
@@ -49,9 +49,7 @@ export function HomeHeader({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={
-              unreadCount > 0
-                ? `Notifications, ${unreadCount} unread`
-                : 'Notifications'
+              unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'
             }
             onPress={onNotifications}
             style={styles.bellBtn}

@@ -1,20 +1,33 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import {
-  GCard,
   GEmptyState,
   GErrorState,
-  GHeader,
-  GListRow,
   GSkeleton,
   GText,
   theme,
+  type IconName,
 } from '@/src/design-system';
+import {
+  ProfileDetailRow,
+  ProfileHeroCard,
+  ProfileScreenShell,
+  PROFILE_BG,
+} from '@/src/features/profile/ProfileScreenShell';
 import { useEarnings, useEarningsBreakdown } from '@/src/hooks';
 import { formatDateTime } from '@/src/utils/date';
 import { getErrorMessage } from '@/src/utils/errors';
 import { formatPaise } from '@/src/utils/money';
+
+const ROW_ICONS: Record<string, IconName> = {
+  'Base fare': 'money',
+  Distance: 'distance',
+  'Surge / peak': 'bolt',
+  Incentive: 'gift',
+  Adjustments: 'edit',
+  Deductions: 'minus',
+};
 
 export default function DeliveryEarningScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -22,46 +35,52 @@ export default function DeliveryEarningScreen() {
   const { breakdown, isLoading, error, refetch } = useEarningsBreakdown(orderId);
   const { history } = useEarnings();
   const delivery = history.find((item) => item.orderId === orderId);
+  const settled = delivery?.status === 'SETTLED';
 
   if (isLoading && !breakdown) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="Delivery earning" showBack onBack={() => router.back()} />
-        <View style={styles.pad}>
-          <GSkeleton height={120} borderRadius={theme.radius.lg} />
-          <GSkeleton height={56} borderRadius={theme.radius.md} />
-          <GSkeleton height={56} borderRadius={theme.radius.md} />
-        </View>
-      </View>
+      <ProfileScreenShell
+        title="Delivery earning"
+        subtitle="Full breakup"
+        onBack={() => router.back()}
+      >
+        <GSkeleton height={120} borderRadius={theme.radius.xl} />
+        <GSkeleton height={72} borderRadius={theme.radius.xl} />
+        <GSkeleton height={72} borderRadius={theme.radius.xl} />
+      </ProfileScreenShell>
     );
   }
 
   if (error && !breakdown) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="Delivery earning" showBack onBack={() => router.back()} />
-        <GErrorState
-          title="Couldn’t load this earning"
-          description={getErrorMessage(error)}
-          onRetry={() => {
-            void refetch();
-          }}
-        />
+      <View style={styles.fallback}>
+        <ProfileScreenShell title="Delivery earning" onBack={() => router.back()}>
+          <GErrorState
+            title="Couldn’t load this earning"
+            description={getErrorMessage(error)}
+            onRetry={() => {
+              void refetch();
+            }}
+          />
+        </ProfileScreenShell>
       </View>
     );
   }
 
   if (!breakdown) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="Delivery earning" showBack onBack={() => router.back()} />
+      <ProfileScreenShell
+        title="Delivery earning"
+        subtitle="Full breakup"
+        onBack={() => router.back()}
+      >
         <GEmptyState
           title="Earning not found"
           description="This delivery may not have a settled breakup yet."
           actionLabel="Back to earnings"
           onAction={() => router.replace('/(tabs)/earnings')}
         />
-      </View>
+      </ProfileScreenShell>
     );
   }
 
@@ -75,68 +94,54 @@ export default function DeliveryEarningScreen() {
   ];
 
   return (
-    <View style={styles.screen}>
-      <GHeader
-        title={delivery?.orderNumber ?? 'Delivery earning'}
-        subtitle={delivery ? formatDateTime(delivery.date) : undefined}
-        showBack
-        onBack={() => router.back()}
-      />
-      <ScrollView
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={false}
-            onRefresh={() => {
-              void refetch();
-            }}
-            tintColor={theme.colors.primary}
-          />
+    <ProfileScreenShell
+      title={delivery?.orderNumber ?? 'Delivery earning'}
+      subtitle={delivery ? formatDateTime(delivery.date) : 'Full breakup'}
+      onBack={() => router.back()}
+      onRefresh={() => {
+        void refetch();
+      }}
+    >
+      <ProfileHeroCard
+        tone="primary"
+        icon="package"
+        eyebrow="Net earning"
+        title={formatPaise(breakdown.netPaise)}
+        body={
+          delivery
+            ? settled
+              ? 'Settled to your weekly payout'
+              : 'Pending settlement'
+            : 'Delivery earning breakup'
         }
-      >
-        <GCard padding="lg" style={styles.hero}>
-          <GText variant="label" color={theme.colors.textSecondary}>
-            Net earning
-          </GText>
-          <GText variant="display">{formatPaise(breakdown.netPaise)}</GText>
-          {delivery ? (
-            <GText variant="caption" color={theme.colors.textMuted}>
-              Status: {delivery.status === 'SETTLED' ? 'Settled' : 'Pending settlement'}
-            </GText>
-          ) : null}
-        </GCard>
+      />
 
-        {rows.map((row) => (
-          <GListRow
-            key={row.label}
-            title={row.label}
-            right={
-              <GText variant="bodyBold">
-                {row.deduct
-                  ? `−${formatPaise(Math.abs(row.value))}`
-                  : formatPaise(row.value)}
-              </GText>
-            }
-          />
-        ))}
-      </ScrollView>
-    </View>
+      <GText variant="bodyBold" style={styles.section}>
+        Breakup
+      </GText>
+
+      {rows.map((row) => (
+        <ProfileDetailRow
+          key={row.label}
+          icon={ROW_ICONS[row.label] ?? 'money'}
+          label={row.label}
+          value={
+            row.deduct
+              ? `−${formatPaise(Math.abs(row.value))}`
+              : formatPaise(row.value)
+          }
+        />
+      ))}
+    </ProfileScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  fallback: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: PROFILE_BG,
   },
-  pad: {
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
-  },
-  content: {
-    paddingBottom: theme.spacing[8],
-  },
-  hero: {
-    margin: theme.spacing[4],
+  section: {
+    marginTop: theme.spacing[1],
   },
 });

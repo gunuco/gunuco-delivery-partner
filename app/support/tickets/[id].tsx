@@ -13,16 +13,19 @@ import {
 import {
   GBadge,
   GButton,
-  GCard,
   GEmptyState,
   GErrorState,
-  GHeader,
   GInput,
   GSkeleton,
   GText,
   theme,
   useToast,
 } from '@/src/design-system';
+import {
+  ProfileHeroCard,
+  ProfileScreenShell,
+  PROFILE_BG,
+} from '@/src/features/profile/ProfileScreenShell';
 import { useSupport, useSupportTicket } from '@/src/hooks';
 import { formatDateTime } from '@/src/utils/date';
 import { getErrorMessage } from '@/src/utils/errors';
@@ -38,60 +41,59 @@ export default function SupportTicketDetailScreen() {
 
   if (isLoading && !ticket) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="Ticket" showBack onBack={() => router.back()} />
-        <View style={styles.pad}>
-          <GSkeleton height={120} borderRadius={theme.radius.lg} />
-          <GSkeleton height={80} borderRadius={theme.radius.md} />
-        </View>
-      </View>
+      <ProfileScreenShell title="Ticket" onBack={() => router.back()}>
+        <GSkeleton height={120} borderRadius={theme.radius.xl} />
+        <GSkeleton height={80} borderRadius={theme.radius.xl} />
+      </ProfileScreenShell>
     );
   }
 
   if (error && !ticket) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="Ticket" showBack onBack={() => router.back()} />
-        <GErrorState
-          title="Couldn’t load ticket"
-          description={getErrorMessage(error)}
-          onRetry={() => {
-            void refetch();
-          }}
-        />
+      <View style={styles.fallback}>
+        <ProfileScreenShell title="Ticket" onBack={() => router.back()}>
+          <GErrorState
+            title="Couldn’t load ticket"
+            description={getErrorMessage(error)}
+            onRetry={() => {
+              void refetch();
+            }}
+          />
+        </ProfileScreenShell>
       </View>
     );
   }
 
   if (!ticket) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="Ticket" showBack onBack={() => router.back()} />
+      <ProfileScreenShell title="Ticket" onBack={() => router.back()}>
         <GEmptyState
           title="Ticket not found"
           actionLabel="Back to tickets"
           onAction={() => router.replace('/support/tickets')}
         />
-      </View>
+      </ProfileScreenShell>
     );
   }
 
   const messages = ticket.messages ?? [];
 
   return (
-    <View style={styles.screen}>
-      <GHeader
-        title={ticket.subject}
-        subtitle={TICKET_CATEGORY_LABELS[ticket.category]}
-        showBack
-        onBack={() => router.back()}
-      />
+    <ProfileScreenShell
+      title={ticket.subject}
+      subtitle={TICKET_CATEGORY_LABELS[ticket.category]}
+      onBack={() => router.back()}
+      scroll={false}
+      contentStyle={styles.bodyPad}
+    >
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
               refreshing={false}
@@ -102,52 +104,50 @@ export default function SupportTicketDetailScreen() {
             />
           }
         >
-          <View style={styles.statusRow}>
-            <GBadge
-              label={ticket.status.replace(/_/g, ' ')}
-              tone={ticketStatusTone(ticket.status)}
-            />
+          <ProfileHeroCard
+            icon="chat"
+            eyebrow="Ticket"
+            title={ticket.subject}
+            body={ticket.description}
+            right={
+              <GBadge
+                label={ticket.status.replace(/_/g, ' ')}
+                tone={ticketStatusTone(ticket.status)}
+              />
+            }
+          >
             <GText variant="caption" color={theme.colors.textMuted}>
               Updated {formatDateTime(ticket.updatedAt)}
+              {ticket.orderId ? ` · Order ${ticket.orderId}` : ''}
             </GText>
-          </View>
+          </ProfileHeroCard>
 
-          <GCard padding="md" style={styles.card}>
-            <GText variant="label" color={theme.colors.textMuted}>
-              Description
-            </GText>
-            <GText variant="body">{ticket.description}</GText>
-            {ticket.orderId ? (
-              <GText variant="caption" color={theme.colors.textSecondary}>
-                Order: {ticket.orderId}
-              </GText>
-            ) : null}
-          </GCard>
-
-          <GText variant="title">Conversation</GText>
+          <GText variant="bodyBold">Conversation</GText>
           {messages.length === 0 ? (
-            <GText variant="body" color={theme.colors.textSecondary}>
-              No messages yet. Add an update below.
-            </GText>
+            <View style={styles.emptyMsg}>
+              <GText variant="body" color={theme.colors.textSecondary}>
+                No messages yet. Add an update below.
+              </GText>
+            </View>
           ) : (
-            messages.map((message) => (
-              <GCard
-                key={message.id}
-                padding="md"
-                style={[
-                  styles.message,
-                  message.sender === 'PARTNER'
-                    ? styles.partnerMsg
-                    : styles.supportMsg,
-                ]}
-              >
-                <GText variant="label" color={theme.colors.textMuted}>
-                  {message.sender === 'PARTNER' ? 'You' : 'GUNUCO Support'} ·{' '}
-                  {formatDateTime(message.createdAt)}
-                </GText>
-                <GText variant="body">{message.body}</GText>
-              </GCard>
-            ))
+            messages.map((message) => {
+              const mine = message.sender === 'PARTNER';
+              return (
+                <View
+                  key={message.id}
+                  style={[
+                    styles.message,
+                    mine ? styles.partnerMsg : styles.supportMsg,
+                  ]}
+                >
+                  <GText variant="label" color={theme.colors.textMuted}>
+                    {mine ? 'You' : 'GUNUCO Support'} ·{' '}
+                    {formatDateTime(message.createdAt)}
+                  </GText>
+                  <GText variant="body">{message.body}</GText>
+                </View>
+              );
+            })
           )}
 
           {ticket.status !== 'CLOSED' && ticket.status !== 'RESOLVED' ? (
@@ -183,44 +183,43 @@ export default function SupportTicketDetailScreen() {
           ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+    </ProfileScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  fallback: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: PROFILE_BG,
+  },
+  bodyPad: {
+    paddingHorizontal: 0,
   },
   flex: {
     flex: 1,
   },
-  pad: {
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
-  },
   content: {
-    padding: theme.spacing[4],
+    paddingHorizontal: theme.spacing[4],
     gap: theme.spacing[3],
     paddingBottom: theme.spacing[10],
   },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: theme.spacing[3],
-  },
-  card: {
-    gap: theme.spacing[2],
+  emptyMsg: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.xl,
+    padding: theme.spacing[3],
+    ...theme.shadows.sm,
   },
   message: {
+    borderRadius: theme.radius.xl,
+    padding: theme.spacing[3],
     gap: theme.spacing[1],
+    ...theme.shadows.sm,
   },
   partnerMsg: {
-    borderColor: theme.colors.primaryLight,
+    backgroundColor: theme.colors.accentSoft,
   },
   supportMsg: {
-    backgroundColor: theme.colors.surfaceMuted,
+    backgroundColor: theme.colors.surface,
   },
   composer: {
     gap: theme.spacing[3],

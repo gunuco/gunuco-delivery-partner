@@ -1,6 +1,6 @@
+import { router } from 'expo-router';
 import { useCallback, useMemo } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -27,10 +27,7 @@ import {
   getDeliveryDeepLink,
   orderDetailsHref,
 } from '@/src/features/orders/deliveryRouting';
-import {
-  formatDistanceKm,
-  formatOrderEarnings,
-} from '@/src/features/orders/orderFormat';
+import { formatDistanceKm, formatOrderEarnings } from '@/src/features/orders/orderFormat';
 import {
   useDemand,
   useEarnings,
@@ -61,11 +58,9 @@ export default function HomeScreen() {
     refetchList,
     refetchActive,
   } = useOrders({ includeHistory: true });
-  const { summary, isLoading: earningsLoading, refetch: refetchEarnings } =
-    useEarnings();
+  const { summary, isLoading: earningsLoading, refetch: refetchEarnings } = useEarnings();
   const { active: incentives, refetch: refetchIncentives } = useIncentives();
-  const { zones, nearby, isLoading: demandLoading, refetch: refetchDemand } =
-    useDemand();
+  const { zones, nearby, isLoading: demandLoading, refetch: refetchDemand } = useDemand();
   const { unreadCount, refetch: refetchNotifications } = useNotifications();
 
   const isOnline = availability === 'ONLINE' || availability === 'BUSY';
@@ -74,17 +69,13 @@ export default function HomeScreen() {
   const recentOrders = useMemo(
     () =>
       [...orders]
-        .sort(
-          (a, b) =>
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-        )
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
         .slice(0, 5),
     [orders],
   );
 
   const demandZones = nearby.length > 0 ? nearby : zones;
-  const topIncentive =
-    incentives.find((i) => i.targetType === 'WEEKLY') ?? incentives[0];
+  const topIncentive = incentives.find((i) => i.targetType === 'WEEKLY') ?? incentives[0];
 
   const onToggleAvailability = useCallback(
     async (next: boolean) => {
@@ -262,7 +253,9 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#FFF5F7',
+
+    // backgroundColor: theme.colors.background,
   },
   content: {
     padding: theme.spacing[4],

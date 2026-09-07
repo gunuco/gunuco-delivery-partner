@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { theme } from '../theme';
@@ -9,9 +10,10 @@ export type GStatCardProps = {
   value: string;
   subtitle?: string;
   trend?: 'up' | 'down' | 'flat';
+  icon?: ReactNode;
 };
 
-export function GStatCard({ label, value, subtitle, trend }: GStatCardProps) {
+export function GStatCard({ label, value, subtitle, trend, icon }: GStatCardProps) {
   const trendColor =
     trend === 'up'
       ? theme.colors.success
@@ -23,7 +25,8 @@ export function GStatCard({ label, value, subtitle, trend }: GStatCardProps) {
     trend === 'up' ? '↑' : trend === 'down' ? '↓' : trend === 'flat' ? '→' : null;
 
   return (
-    <GCard padding="md" style={styles.card}>
+    <GCard padding="md" elevated style={styles.card}>
+      {icon ? <View style={styles.iconWrap}>{icon}</View> : null}
       <GText variant="label" color={theme.colors.textSecondary}>
         {label}
       </GText>
@@ -48,6 +51,12 @@ const styles = StyleSheet.create({
   card: {
     minWidth: 140,
     flexGrow: 1,
+    borderWidth: 0,
+    borderRadius: theme.radius.xl,
+    gap: 2,
+  },
+  iconWrap: {
+    marginBottom: theme.spacing[1],
   },
   valueRow: {
     flexDirection: 'row',

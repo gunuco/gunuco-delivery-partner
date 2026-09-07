@@ -1,56 +1,106 @@
+import type { ImageSource } from 'expo-image';
+import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 
 import { theme } from '../theme';
-import { GCard } from './GCard';
 import { GText } from './GText';
 
 export type GEarningsCardProps = {
   periodLabel: string;
   amount: string;
   subtitle?: string;
+  slogan?: string;
+  /** Optional designed maroon hero artwork (right-side graphics). */
+  backgroundSource?: ImageSource;
 };
 
-export function GEarningsCard({ periodLabel, amount, subtitle }: GEarningsCardProps) {
+export function GEarningsCard({
+  periodLabel,
+  amount,
+  subtitle,
+  slogan = 'More Deliveries Brighter Tomorrow',
+  backgroundSource,
+}: GEarningsCardProps) {
   return (
-    <GCard padding="lg" style={styles.card}>
-      <GText variant="label" color={theme.colors.textInverse} style={styles.label}>
-        {periodLabel}
-      </GText>
-      <GText variant="display" color={theme.colors.textInverse}>
-        {amount}
-      </GText>
-      {subtitle ? (
-        <GText variant="caption" color="rgba(255,255,255,0.82)" style={styles.sub}>
-          {subtitle}
-        </GText>
+    <View style={styles.card}>
+      {backgroundSource ? (
+        <Image
+          source={backgroundSource}
+          style={styles.bg}
+          contentFit="cover"
+          contentPosition="right center"
+          accessibilityIgnoresInvertColors
+        />
       ) : null}
-      <View style={styles.accent} />
-    </GCard>
+      <View style={styles.content}>
+        <View style={styles.left}>
+          <GText variant="label" color={theme.colors.textInverse} style={styles.label}>
+            {periodLabel}
+          </GText>
+          <GText variant="display" color={theme.colors.textInverse} style={styles.amount}>
+            {amount}
+          </GText>
+          {subtitle ? (
+            <GText variant="caption" color="rgba(255,255,255,0.88)">
+              {subtitle}
+            </GText>
+          ) : null}
+        </View>
+        {slogan ? (
+          <GText
+            variant="caption"
+            color={theme.colors.textInverse}
+            style={styles.slogan}
+            numberOfLines={3}
+          >
+            {slogan}
+          </GText>
+        ) : null}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primaryDark,
+    borderRadius: theme.radius.xl,
     overflow: 'hidden',
+    minHeight: 132,
+    backgroundColor: theme.colors.primary,
+    ...theme.shadows.md,
+  },
+  bg: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing[4],
+    paddingVertical: theme.spacing[4],
+    minHeight: 132,
+    gap: theme.spacing[3],
+  },
+  left: {
+    flex: 1,
+    gap: theme.spacing[1],
+    zIndex: 1,
   },
   label: {
     textTransform: 'uppercase',
+    letterSpacing: 1,
+    opacity: 0.92,
+  },
+  amount: {
+    marginTop: 2,
+  },
+  slogan: {
+    maxWidth: 118,
+    fontStyle: 'italic',
+    fontWeight: '600',
+    textAlign: 'right',
+    lineHeight: 16,
     marginBottom: theme.spacing[1],
-    opacity: 0.9,
-  },
-  sub: {
-    marginTop: theme.spacing[2],
-  },
-  accent: {
-    position: 'absolute',
-    right: -24,
-    bottom: -24,
-    width: 96,
-    height: 96,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.accent,
-    opacity: 0.22,
+    zIndex: 1,
   },
 });

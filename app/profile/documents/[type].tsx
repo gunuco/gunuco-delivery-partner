@@ -1,21 +1,24 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 import {
   GButton,
-  GCard,
   GEmptyState,
   GErrorState,
-  GHeader,
-  GListRow,
   GSkeleton,
   GStatusBadge,
   GText,
   theme,
   useToast,
 } from '@/src/design-system';
+import {
+  ProfileDetailRow,
+  ProfileHeroCard,
+  ProfileScreenShell,
+  PROFILE_BG,
+} from '@/src/features/profile/ProfileScreenShell';
 import { useDocuments } from '@/src/hooks';
 import type { DocumentType } from '@/src/types';
 import { formatDate, formatDateTime } from '@/src/utils/date';
@@ -41,41 +44,38 @@ export default function DocumentDetailScreen() {
 
   if (isLoading && documents.length === 0) {
     return (
-      <View style={styles.screen}>
-        <GHeader title={label} showBack onBack={() => router.back()} />
-        <View style={styles.pad}>
-          <GSkeleton height={140} borderRadius={theme.radius.lg} />
-        </View>
-      </View>
+      <ProfileScreenShell title={label} onBack={() => router.back()}>
+        <GSkeleton height={140} borderRadius={theme.radius.xl} />
+      </ProfileScreenShell>
     );
   }
 
   if (error && documents.length === 0) {
     return (
-      <View style={styles.screen}>
-        <GHeader title={label} showBack onBack={() => router.back()} />
-        <GErrorState
-          title="Couldn’t load document"
-          description={getErrorMessage(error)}
-          onRetry={() => {
-            void refetch();
-          }}
-        />
+      <View style={styles.fallback}>
+        <ProfileScreenShell title={label} onBack={() => router.back()}>
+          <GErrorState
+            title="Couldn’t load document"
+            description={getErrorMessage(error)}
+            onRetry={() => {
+              void refetch();
+            }}
+          />
+        </ProfileScreenShell>
       </View>
     );
   }
 
   if (!doc) {
     return (
-      <View style={styles.screen}>
-        <GHeader title={label} showBack onBack={() => router.back()} />
+      <ProfileScreenShell title={label} onBack={() => router.back()}>
         <GEmptyState
           title="Document not found"
           description="This document type is not on your profile yet."
           actionLabel="Back to documents"
           onAction={() => router.replace('/profile/documents')}
         />
-      </View>
+      </ProfileScreenShell>
     );
   }
 
@@ -105,77 +105,59 @@ export default function DocumentDetailScreen() {
   };
 
   return (
-    <View style={styles.screen}>
-      <GHeader title={label} showBack onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.content}>
-        <GCard padding="lg" style={styles.hero}>
-          <GStatusBadge status={doc.status} kind="partner" />
-          <GText variant="h3">{label}</GText>
-          {doc.rejectionReason ? (
-            <GText variant="body" color={theme.colors.danger}>
-              {doc.rejectionReason}
-            </GText>
-          ) : (
-            <GText variant="body" color={theme.colors.textSecondary}>
-              Keep a clear photo of the original document. Blurry uploads delay
-              approval.
-            </GText>
-          )}
-        </GCard>
+    <ProfileScreenShell
+      title={label}
+      subtitle="Document details"
+      onBack={() => router.back()}
+    >
+      <ProfileHeroCard
+        icon="document"
+        eyebrow="Status"
+        title={label}
+        body={
+          doc.rejectionReason
+            ? doc.rejectionReason
+            : 'Keep a clear photo of the original document. Blurry uploads delay approval.'
+        }
+        right={<GStatusBadge status={doc.status} kind="partner" />}
+      />
 
-        <GListRow
-          title="Uploaded"
-          right={
-            <GText variant="body">
-              {doc.uploadedAt ? formatDateTime(doc.uploadedAt) : 'Not uploaded'}
-            </GText>
-          }
-        />
-        <GListRow
-          title="Expiry"
-          right={
-            <GText variant="body">
-              {doc.expiryDate ? formatDate(doc.expiryDate) : '—'}
-            </GText>
-          }
-        />
+      <ProfileDetailRow
+        icon="clock"
+        label="Uploaded"
+        value={doc.uploadedAt ? formatDateTime(doc.uploadedAt) : 'Not uploaded'}
+      />
+      <ProfileDetailRow
+        icon="calendar"
+        label="Expiry"
+        value={doc.expiryDate ? formatDate(doc.expiryDate) : '—'}
+      />
 
-        <View style={styles.actions}>
-          <GButton
-            title={
-              doc.status === 'NOT_UPLOADED' || doc.status === 'REJECTED'
-                ? 'Upload document'
-                : 'Replace document'
-            }
-            fullWidth
-            size="lg"
-            loading={uploadState.isLoading}
-            onPress={() => {
-              void onUpload();
-            }}
-          />
-        </View>
-      </ScrollView>
-    </View>
+      <View style={styles.actions}>
+        <GButton
+          title={
+            doc.status === 'NOT_UPLOADED' || doc.status === 'REJECTED'
+              ? 'Upload document'
+              : 'Replace document'
+          }
+          fullWidth
+          size="lg"
+          loading={uploadState.isLoading}
+          onPress={() => {
+            void onUpload();
+          }}
+        />
+      </View>
+    </ProfileScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  fallback: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  pad: {
-    padding: theme.spacing[4],
-  },
-  content: {
-    paddingBottom: theme.spacing[8],
-  },
-  hero: {
-    margin: theme.spacing[4],
-    gap: theme.spacing[2],
+    backgroundColor: PROFILE_BG,
   },
   actions: {
-    padding: theme.spacing[4],
+    marginTop: theme.spacing[1],
   },
 });

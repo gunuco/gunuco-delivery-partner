@@ -1,16 +1,20 @@
 import { router } from 'expo-router';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import {
   GBadge,
-  GCard,
   GEmptyState,
   GErrorState,
-  GHeader,
+  GIcon,
   GSkeleton,
   GText,
   theme,
 } from '@/src/design-system';
+import {
+  ProfileHeroCard,
+  ProfileScreenShell,
+  PROFILE_BG,
+} from '@/src/features/profile/ProfileScreenShell';
 import { useBenefits } from '@/src/hooks';
 import { formatDate } from '@/src/utils/date';
 import { getErrorMessage } from '@/src/utils/errors';
@@ -20,109 +24,114 @@ export default function BenefitsScreen() {
 
   if (isLoading && benefits.length === 0) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="Benefits" showBack onBack={() => router.back()} />
-        <View style={styles.pad}>
-          <GSkeleton height={100} borderRadius={theme.radius.lg} />
-          <GSkeleton height={100} borderRadius={theme.radius.lg} />
-        </View>
-      </View>
+      <ProfileScreenShell
+        title="Benefits"
+        subtitle="Perks for active riders"
+        onBack={() => router.back()}
+      >
+        <GSkeleton height={100} borderRadius={theme.radius.xl} />
+        <GSkeleton height={100} borderRadius={theme.radius.xl} />
+      </ProfileScreenShell>
     );
   }
 
   if (error && benefits.length === 0) {
     return (
-      <View style={styles.screen}>
-        <GHeader title="Benefits" showBack onBack={() => router.back()} />
-        <GErrorState
-          title="Couldn’t load benefits"
-          description={getErrorMessage(error)}
-          onRetry={() => {
-            void refetch();
-          }}
-        />
+      <View style={styles.fallback}>
+        <ProfileScreenShell title="Benefits" onBack={() => router.back()}>
+          <GErrorState
+            title="Couldn’t load benefits"
+            description={getErrorMessage(error)}
+            onRetry={() => {
+              void refetch();
+            }}
+          />
+        </ProfileScreenShell>
       </View>
     );
   }
 
   return (
-    <View style={styles.screen}>
-      <GHeader
-        title="Partner benefits"
-        subtitle="Perks for active riders"
-        showBack
-        onBack={() => router.back()}
+    <ProfileScreenShell
+      title="Partner benefits"
+      subtitle="Perks for active riders"
+      onBack={() => router.back()}
+      refreshing={isFetching && !isLoading}
+      onRefresh={() => {
+        void refetch();
+      }}
+    >
+      <ProfileHeroCard
+        tone="primary"
+        icon="gift"
+        eyebrow="Rewards"
+        title="More deliveries More rewards!"
+        body="Stay online and complete cake deliveries to unlock partner perks."
       />
-      <ScrollView
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={isFetching && !isLoading}
-            onRefresh={() => {
-              void refetch();
-            }}
-            tintColor={theme.colors.primary}
-          />
-        }
-      >
-        {benefits.length === 0 ? (
-          <GEmptyState
-            title="No benefits yet"
-            description="Stay online and complete deliveries to unlock partner perks."
-          />
-        ) : (
-          benefits.map((benefit) => (
-            <GCard key={benefit.id} padding="md" style={styles.card}>
-              <View style={styles.row}>
-                <GText variant="bodyBold" style={styles.flex}>
-                  {benefit.title}
-                </GText>
-                <GBadge
-                  label={benefit.status}
-                  tone={benefit.status === 'ACTIVE' ? 'success' : 'neutral'}
-                />
+
+      {benefits.length === 0 ? (
+        <GEmptyState
+          title="No benefits yet"
+          description="Stay online and complete deliveries to unlock partner perks."
+        />
+      ) : (
+        benefits.map((benefit) => (
+          <View key={benefit.id} style={styles.card}>
+            <View style={styles.cardTop}>
+              <View style={styles.iconCircle}>
+                <GIcon name="star" size={18} color={theme.colors.primary} />
               </View>
-              <GText variant="body" color={theme.colors.textSecondary}>
-                {benefit.description}
-              </GText>
-              <GText variant="caption" color={theme.colors.textMuted}>
-                {benefit.provider ? `${benefit.provider} · ` : ''}
-                {benefit.validUntil
-                  ? `Valid till ${formatDate(benefit.validUntil)}`
-                  : 'Validity not specified'}
-              </GText>
-            </GCard>
-          ))
-        )}
-      </ScrollView>
-    </View>
+              <View style={styles.cardCopy}>
+                <GText variant="bodyBold">{benefit.title}</GText>
+                <GText variant="body" color={theme.colors.textSecondary}>
+                  {benefit.description}
+                </GText>
+                <GText variant="caption" color={theme.colors.textMuted}>
+                  {benefit.provider ? `${benefit.provider} · ` : ''}
+                  {benefit.validUntil
+                    ? `Valid till ${formatDate(benefit.validUntil)}`
+                    : 'Validity not specified'}
+                </GText>
+              </View>
+              <GBadge
+                label={benefit.status}
+                tone={benefit.status === 'ACTIVE' ? 'success' : 'neutral'}
+              />
+            </View>
+          </View>
+        ))
+      )}
+    </ProfileScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  fallback: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  pad: {
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
-  },
-  content: {
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
-    paddingBottom: theme.spacing[8],
-    flexGrow: 1,
+    backgroundColor: PROFILE_BG,
   },
   card: {
-    gap: theme.spacing[2],
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.xl,
+    padding: theme.spacing[3],
+    ...theme.shadows.sm,
   },
-  row: {
+  cardTop: {
     flexDirection: 'row',
-    gap: theme.spacing[3],
     alignItems: 'flex-start',
+    gap: theme.spacing[3],
   },
-  flex: {
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardCopy: {
     flex: 1,
+    gap: theme.spacing[1],
+    minWidth: 0,
   },
 });

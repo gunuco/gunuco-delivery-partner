@@ -15,10 +15,10 @@ export type GDocumentCardProps = {
 
 export function GDocumentCard({ type, status, expiry, onPress }: GDocumentCardProps) {
   return (
-    <GCard onPress={onPress} padding="md">
+    <GCard onPress={onPress} padding="md" elevated style={styles.card}>
       <View style={styles.row}>
         <View style={styles.iconWrap}>
-          <GIcon name="document" size={22} color={theme.colors.primary} />
+          <GIcon name="document" size={20} color={theme.colors.primary} />
         </View>
         <View style={styles.content}>
           <GText variant="bodyBold" numberOfLines={1}>
@@ -28,30 +28,40 @@ export function GDocumentCard({ type, status, expiry, onPress }: GDocumentCardPr
             <GText variant="caption" color={theme.colors.textSecondary}>
               Expires {expiry}
             </GText>
-          ) : null}
+          ) : (
+            <GText variant="caption" color={theme.colors.textMuted}>
+              No expiry on file
+            </GText>
+          )}
         </View>
         <GStatusBadge status={status} kind="partner" />
+        <GIcon name="chevronRight" size={18} color={theme.colors.textMuted} />
       </View>
     </GCard>
   );
 }
 
 const styles = StyleSheet.create({
+  card: {
+    borderWidth: 0,
+    borderRadius: theme.radius.xl,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing[3],
   },
   iconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.surfaceMuted,
+    width: 40,
+    height: 40,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   content: {
     flex: 1,
     gap: 2,
+    minWidth: 0,
   },
 });
