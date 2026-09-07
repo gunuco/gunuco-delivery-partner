@@ -1,31 +1,27 @@
 import { useCallback, useMemo } from 'react';
-import {
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
-  GBadge,
   GButton,
   GCard,
   GEmptyState,
   GErrorState,
-  GIcon,
   GOrderCard,
-  GProgress,
   GSectionHeader,
   GSkeleton,
-  GStatCard,
-  GSwitch,
   GText,
   theme,
   useToast,
 } from '@/src/design-system';
+import { DemandAreasRow } from '@/src/features/home/DemandAreasRow';
+import { HomeHeader } from '@/src/features/home/HomeHeader';
+import { HomeStatsRow } from '@/src/features/home/HomeStatsRow';
+import { OnlineStatusCard } from '@/src/features/home/OnlineStatusCard';
+import { QuickActionsGrid } from '@/src/features/home/QuickActionsGrid';
+import { RecentOrdersSection } from '@/src/features/home/RecentOrdersSection';
+import { WeeklyIncentiveCard } from '@/src/features/home/WeeklyIncentiveCard';
 import {
   assignmentHref,
   getDeliveryDeepLink,
@@ -39,17 +35,11 @@ import {
   useDemand,
   useEarnings,
   useIncentives,
+  useNotifications,
   useOrders,
   usePartner,
 } from '@/src/hooks';
-import { formatPaise } from '@/src/utils/money';
-import type { DemandLevel, Order } from '@/src/types';
-
-function demandTone(level: DemandLevel): 'danger' | 'warning' | 'success' {
-  if (level === 'HIGH') return 'danger';
-  if (level === 'LOW') return 'success';
-  return 'warning';
-}
+import type { Order } from '@/src/types';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -76,6 +66,7 @@ export default function HomeScreen() {
   const { active: incentives, refetch: refetchIncentives } = useIncentives();
   const { zones, nearby, isLoading: demandLoading, refetch: refetchDemand } =
     useDemand();
+  const { unreadCount, refetch: refetchNotifications } = useNotifications();
 
   const isOnline = availability === 'ONLINE' || availability === 'BUSY';
   const assignedPending = activeOrder?.status === 'ASSIGNED' ? activeOrder : null;
@@ -92,7 +83,8 @@ export default function HomeScreen() {
   );
 
   const demandZones = nearby.length > 0 ? nearby : zones;
-  const topIncentive = incentives[0];
+  const topIncentive =
+    incentives.find((i) => i.targetType === 'WEEKLY') ?? incentives[0];
 
   const onToggleAvailability = useCallback(
     async (next: boolean) => {
@@ -122,6 +114,7 @@ export default function HomeScreen() {
       refetchEarnings(),
       refetchIncentives(),
       refetchDemand(),
+      refetchNotifications(),
     ]);
   }, [
     refetchActive,
@@ -129,6 +122,7 @@ export default function HomeScreen() {
     refetchEarnings,
     refetchIncentives,
     refetchList,
+    refetchNotifications,
     refetchPartner,
   ]);
 
@@ -150,6 +144,7 @@ export default function HomeScreen() {
   }, []);
 
   const loading = partnerLoading || ordersLoading || earningsLoading;
+  const partnerName = partner?.name ?? 'Partner';
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
@@ -163,40 +158,20 @@ export default function HomeScreen() {
           />
         }
       >
-        <View style={styles.headerRow}>
-          <View style={styles.brandCol}>
-            <GText variant="caption" color={theme.colors.textSecondary}>
-              GUNUCO Partner
-            </GText>
-            <GText variant="h2">{partner?.name ?? 'Delivery partner'}</GText>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Notifications"
-            onPress={() => router.push('/notifications')}
-            style={styles.iconBtn}
-          >
-            <GIcon name="notification" size={22} color={theme.colors.primary} />
-          </Pressable>
-        </View>
+        <HomeHeader
+          partnerName={partnerName}
+          photoUrl={partner?.photoUrl}
+          isOnline={isOnline}
+          unreadCount={unreadCount}
+          onNotifications={() => router.push('/notifications')}
+          onProfile={() => router.push('/(tabs)/profile')}
+        />
 
-        <GCard padding="md" style={styles.availabilityCard}>
-          <GSwitch
-            label={isOnline ? 'Online' : 'Offline'}
-            description={
-              isOnline
-                ? 'Receiving new order assignments'
-                : 'Go online to start receiving orders'
-            }
-            value={isOnline}
-            onValueChange={onToggleAvailability}
-            disabled={isTogglingAvailability}
-          />
-          <GBadge
-            label={availability ?? 'UNKNOWN'}
-            tone={isOnline ? 'success' : 'neutral'}
-          />
-        </GCard>
+        <OnlineStatusCard
+          isOnline={isOnline}
+          isToggling={isTogglingAvailability}
+          onToggle={onToggleAvailability}
+        />
 
         {assignedPending ? (
           <GCard padding="md" style={styles.assignBanner}>
@@ -216,9 +191,9 @@ export default function HomeScreen() {
 
         {loading ? (
           <View style={styles.skeletonBlock}>
-            <GSkeleton height={88} borderRadius={theme.radius.lg} />
-            <GSkeleton height={88} borderRadius={theme.radius.lg} />
-            <GSkeleton height={120} borderRadius={theme.radius.lg} />
+            <GSkeleton height={88} borderRadius={theme.radius.xl} />
+            <GSkeleton height={88} borderRadius={theme.radius.xl} />
+            <GSkeleton height={120} borderRadius={theme.radius.xl} />
           </View>
         ) : listError ? (
           <GErrorState
@@ -228,41 +203,9 @@ export default function HomeScreen() {
           />
         ) : (
           <>
-            <View style={styles.statsRow}>
-              <GStatCard
-                label="Today"
-                value={formatPaise(summary?.todayPaise ?? 0)}
-                subtitle={`${summary?.todayOrders ?? 0} orders`}
-              />
-              <GStatCard
-                label="Distance"
-                value={formatDistanceKm(summary?.todayDistanceKm ?? 0)}
-                subtitle="Today"
-              />
-            </View>
+            <HomeStatsRow summary={summary} rating={partner?.rating ?? 0} />
 
-            {topIncentive ? (
-              <GCard padding="md" style={styles.sectionCard}>
-                <GSectionHeader
-                  title="Incentive"
-                  subtitle={topIncentive.remainingLabel ?? topIncentive.title}
-                />
-                <GText variant="body" color={theme.colors.textSecondary}>
-                  {topIncentive.description}
-                </GText>
-                <GProgress
-                  progress={
-                    topIncentive.targetValue > 0
-                      ? topIncentive.currentValue / topIncentive.targetValue
-                      : 0
-                  }
-                />
-                <GText variant="caption" color={theme.colors.textMuted}>
-                  {topIncentive.currentValue}/{topIncentive.targetValue} · Reward{' '}
-                  {formatPaise(topIncentive.rewardPaise)}
-                </GText>
-              </GCard>
-            ) : null}
+            {topIncentive ? <WeeklyIncentiveCard incentive={topIncentive} /> : null}
 
             {activeOrder && activeOrder.status !== 'ASSIGNED' ? (
               <View style={styles.section}>
@@ -278,77 +221,37 @@ export default function HomeScreen() {
               </View>
             ) : null}
 
-            <View style={styles.section}>
-              <GSectionHeader
-                title="Demand nearby"
-                subtitle={demandLoading ? 'Updating…' : undefined}
+            {demandZones.length > 0 ? (
+              <DemandAreasRow
+                zones={demandZones.slice(0, 8)}
+                onViewMap={() => router.push('/demand')}
               />
-              {demandZones.length === 0 ? (
-                <GEmptyState
-                  title="No demand data"
-                  description="Demand zones will appear when available."
-                />
-              ) : (
-                <View style={styles.demandList}>
-                  {demandZones.slice(0, 4).map((zone) => (
-                    <View key={zone.id} style={styles.demandRow}>
-                      <GText variant="bodyBold" style={styles.demandName}>
-                        {zone.name}
-                      </GText>
-                      <GBadge label={zone.level} tone={demandTone(zone.level)} />
-                    </View>
-                  ))}
-                </View>
-              )}
-            </View>
+            ) : demandLoading ? null : (
+              <GEmptyState
+                title="No demand data"
+                description="Demand zones will appear when available."
+              />
+            )}
 
-            <View style={styles.section}>
-              <GSectionHeader title="Quick actions" />
-              <View style={styles.quickRow}>
-                <GButton
-                  title="Support"
-                  variant="secondary"
-                  onPress={() => router.push('/support')}
-                  style={styles.quickBtn}
-                />
-                <GButton
-                  title="Emergency"
-                  variant="danger"
-                  onPress={() => router.push('/emergency')}
-                  style={styles.quickBtn}
-                />
-                <GButton
-                  title="Alerts"
-                  variant="outline"
-                  onPress={() => router.push('/notifications')}
-                  style={styles.quickBtn}
-                />
-              </View>
-            </View>
+            <QuickActionsGrid
+              onSupport={() => router.push('/support')}
+              onEmergency={() => router.push('/emergency')}
+              onAlerts={() => router.push('/notifications')}
+              onHelp={() => router.push('/support/faq')}
+            />
 
-            <View style={styles.section}>
-              <GSectionHeader title="Recent orders" />
-              {recentOrders.length === 0 ? (
-                <GEmptyState
-                  title="No recent orders"
-                  description="Completed and active orders will show up here."
-                />
-              ) : (
-                <View style={styles.orderList}>
-                  {recentOrders.map((order) => (
-                    <GOrderCard
-                      key={order.id}
-                      orderNumber={order.orderNumber}
-                      status={order.status}
-                      customerArea={order.customerArea}
-                      earnings={formatOrderEarnings(order)}
-                      distance={formatDistanceKm(order.distanceKm)}
-                      onPress={() => openOrder(order)}
-                    />
-                  ))}
-                </View>
-              )}
-            </View>
+            {recentOrders.length === 0 ? (
+              <GEmptyState
+                title="No recent orders"
+                description="Completed and active orders will show up here."
+              />
+            ) : (
+              <RecentOrdersSection
+                orders={recentOrders}
+                onViewAll={() => router.push('/(tabs)/orders')}
+                onOpenOrder={openOrder}
+              />
+            )}
           </>
         )}
       </ScrollView>
@@ -366,32 +269,10 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing[10],
     gap: theme.spacing[4],
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  brandCol: {
-    flex: 1,
-    gap: 2,
-  },
-  iconBtn: {
-    width: theme.components.minTouchTarget,
-    height: theme.components.minTouchTarget,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: theme.colors.border,
-  },
-  availabilityCard: {
-    gap: theme.spacing[2],
-  },
   assignBanner: {
     gap: theme.spacing[2],
     borderColor: theme.colors.info,
-    backgroundColor: '#E6EEFC',
+    backgroundColor: theme.colors.infoSoft,
   },
   assignCta: {
     marginTop: theme.spacing[2],
@@ -399,42 +280,7 @@ const styles = StyleSheet.create({
   skeletonBlock: {
     gap: theme.spacing[3],
   },
-  statsRow: {
-    flexDirection: 'row',
-    gap: theme.spacing[3],
-  },
   section: {
     gap: theme.spacing[2],
-  },
-  sectionCard: {
-    gap: theme.spacing[2],
-  },
-  demandList: {
-    gap: theme.spacing[2],
-  },
-  demandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing[3],
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: theme.colors.border,
-  },
-  demandName: {
-    flex: 1,
-    marginRight: theme.spacing[2],
-  },
-  quickRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing[2],
-  },
-  quickBtn: {
-    flexGrow: 1,
-  },
-  orderList: {
-    gap: theme.spacing[3],
   },
 });

@@ -50,7 +50,7 @@ export default function PickupScreen() {
 
   const allItemsChecked = useMemo(() => {
     if (!order) return false;
-    return order.items.every((item) => checkedItems[item.id]);
+    return (order.items ?? []).every((item) => checkedItems[item.id]);
   }, [checkedItems, order]);
 
   const allPackagingChecked = useMemo(
@@ -61,7 +61,7 @@ export default function PickupScreen() {
   const canConfirm = allItemsChecked && allPackagingChecked;
 
   const onNavigate = useCallback(async () => {
-    if (!order?.pickup.address.coordinates) {
+    if (!order?.pickup?.address?.coordinates) {
       toast.showToast({ type: 'warning', message: 'No pickup coordinates' });
       return;
     }
@@ -130,7 +130,7 @@ export default function PickupScreen() {
       />
       <ScrollView contentContainerStyle={styles.content}>
         <GMapCard
-          destinationLabel={order.pickup.name}
+          destinationLabel={order.pickup?.name ?? 'Pickup'}
           distance={formatDistanceKm(order.distanceKm)}
           eta={formatEtaMinutes(order.estimatedDurationMinutes)}
           onNavigate={() => {
@@ -139,11 +139,11 @@ export default function PickupScreen() {
         />
 
         <GCard padding="md" style={styles.card}>
-          <GText variant="bodyBold">{order.pickup.name}</GText>
+          <GText variant="bodyBold">{order.pickup?.name ?? 'Pickup'}</GText>
           <GText variant="body" color={theme.colors.textSecondary}>
-            {formatAddress(order.pickup.address)}
+            {formatAddress(order.pickup?.address)}
           </GText>
-          {order.pickup.instructions ? (
+          {order.pickup?.instructions ? (
             <GText variant="caption" color={theme.colors.textMuted}>
               {order.pickup.instructions}
             </GText>
@@ -158,12 +158,12 @@ export default function PickupScreen() {
                 <GBadge key={instruction} label={instruction} tone="accent" />
               ))}
             </View>
-            {order.items
-              .filter((item) => item.handlingInstructions.length > 0)
+            {(order.items ?? [])
+              .filter((item) => (item.handlingInstructions ?? []).length > 0)
               .map((item) => (
                 <View key={item.id} style={styles.handlingItem}>
                   <GText variant="bodyBold">{item.name}</GText>
-                  {item.handlingInstructions.map((instruction) => (
+                  {(item.handlingInstructions ?? []).map((instruction) => (
                     <GText
                       key={`${item.id}-${instruction}`}
                       variant="caption"
@@ -179,7 +179,7 @@ export default function PickupScreen() {
 
         <GCard padding="md" style={styles.card}>
           <GSectionHeader title="Item checklist" />
-          {order.items.map((item) => (
+          {(order.items ?? []).map((item) => (
             <GCheckbox
               key={item.id}
               label={`${item.quantity}× ${item.name}`}

@@ -1,7 +1,8 @@
 import type { Address, Order, OrderItem } from '@/src/types';
 import { formatPaise } from '@/src/utils/money';
 
-export function formatAddress(address: Address): string {
+export function formatAddress(address?: Address | null): string {
+  if (!address) return '—';
   return [address.line1, address.line2, address.area, address.city, address.pincode]
     .filter(Boolean)
     .join(', ');
@@ -22,13 +23,13 @@ export function formatOrderEarnings(order: Order): string {
 }
 
 export function getItemsCount(order: Order): number {
-  return order.items.reduce((sum, item) => sum + item.quantity, 0);
+  return (order.items ?? []).reduce((sum, item) => sum + (item.quantity ?? 0), 0);
 }
 
-export function collectHandlingInstructions(items: OrderItem[]): string[] {
+export function collectHandlingInstructions(items?: OrderItem[] | null): string[] {
   const seen = new Set<string>();
   const result: string[] = [];
-  for (const item of items) {
+  for (const item of items ?? []) {
     for (const instruction of item.handlingInstructions ?? []) {
       const normalized = instruction.trim();
       if (!normalized || seen.has(normalized)) continue;
@@ -39,13 +40,13 @@ export function collectHandlingInstructions(items: OrderItem[]): string[] {
   return result;
 }
 
-export function hasCakeOrFragileItems(items: OrderItem[]): boolean {
-  return items.some(
+export function hasCakeOrFragileItems(items?: OrderItem[] | null): boolean {
+  return (items ?? []).some(
     (item) =>
       item.isFragile ||
       item.isMultiTier === true ||
       item.requiresRefrigeration === true ||
-      /cake/i.test(item.name),
+      /cake/i.test(item.name ?? ''),
   );
 }
 

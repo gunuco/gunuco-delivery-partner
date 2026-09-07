@@ -74,26 +74,29 @@ function cloneSeed(bundle: SeedBundle): Omit<
     bankDetails: { ...bundle.bankDetails },
     onboarding: {
       ...bundle.onboarding,
-      completedSteps: [...bundle.onboarding.completedSteps],
-      requiredSteps: [...bundle.onboarding.requiredSteps],
+      completedSteps: [...(bundle.onboarding?.completedSteps ?? [])],
+      requiredSteps: [...(bundle.onboarding?.requiredSteps ?? [])],
     },
     orders: bundle.orders.map((o) => ({
       ...o,
-      items: o.items.map((i) => ({
+      items: (o.items ?? []).map((i) => ({
         ...i,
-        handlingInstructions: [...i.handlingInstructions],
+        handlingInstructions: [...(i.handlingInstructions ?? [])],
       })),
       pickup: {
         ...o.pickup,
-        address: { ...o.pickup.address, coordinates: o.pickup.address.coordinates
-          ? { ...o.pickup.address.coordinates }
-          : undefined },
+        address: {
+          ...(o.pickup?.address ?? {}),
+          coordinates: o.pickup?.address?.coordinates
+            ? { ...o.pickup.address.coordinates }
+            : undefined,
+        },
       },
       delivery: {
         ...o.delivery,
         address: {
-          ...o.delivery.address,
-          coordinates: o.delivery.address.coordinates
+          ...(o.delivery?.address ?? {}),
+          coordinates: o.delivery?.address?.coordinates
             ? { ...o.delivery.address.coordinates }
             : undefined,
         },
@@ -101,7 +104,7 @@ function cloneSeed(bundle: SeedBundle): Omit<
     })),
     earnings: bundle.earnings.map((e) => ({
       ...e,
-      breakdown: { ...e.breakdown },
+      breakdown: { ...(e.breakdown ?? {}) },
     })),
     payouts: bundle.payouts.map((p) => ({ ...p })),
     incentives: bundle.incentives.map((i) => ({ ...i })),

@@ -65,7 +65,7 @@ export default function EarningsDashboardScreen() {
         return {
           label: 'Today',
           amount: formatPaise(summary.todayPaise),
-          subtitle: `${summary.todayOrders} deliveries · ${summary.todayDistanceKm.toFixed(1)} km`,
+          subtitle: `${summary.todayOrders ?? 0} deliveries · ${(summary.todayDistanceKm ?? 0).toFixed(1)} km`,
         };
     }
   }, [period, summary]);
@@ -209,7 +209,7 @@ export default function EarningsDashboardScreen() {
               right={
                 <View style={styles.earningRight}>
                   <GText variant="bodyBold">
-                    {formatPaise(item.breakdown.netPaise)}
+                    {formatPaise(item.breakdown?.netPaise ?? 0)}
                   </GText>
                   <GBadge
                     label={item.status === 'SETTLED' ? 'Settled' : 'Pending'}

@@ -22,7 +22,7 @@ export default function DeliveryCompleteScreen() {
   if (isLoading) {
     return (
       <View style={styles.root}>
-        <GHeader title="Complete" showBack onBack={() => router.replace('/(tabs)')} />
+        <GHeader title="Complete" showBack onBack={() => router.replace('/(tabs)/home')} />
         <GLoader label="Loading…" />
       </View>
     );
@@ -31,7 +31,7 @@ export default function DeliveryCompleteScreen() {
   if (error || !order) {
     return (
       <View style={styles.root}>
-        <GHeader title="Complete" showBack onBack={() => router.replace('/(tabs)')} />
+        <GHeader title="Complete" showBack onBack={() => router.replace('/(tabs)/home')} />
         <GErrorState
           title="Order unavailable"
           onRetry={() => {
@@ -44,7 +44,7 @@ export default function DeliveryCompleteScreen() {
 
   return (
     <View style={styles.root}>
-      <GHeader title="Delivered" showBack onBack={() => router.replace('/(tabs)')} />
+      <GHeader title="Delivered" showBack onBack={() => router.replace('/(tabs)/home')} />
       <View style={styles.body}>
         <View style={styles.iconWrap}>
           <GIcon name="checkCircle" size={48} color={theme.colors.success} />
@@ -67,7 +67,7 @@ export default function DeliveryCompleteScreen() {
           title="Back to home"
           size="lg"
           fullWidth
-          onPress={() => router.replace('/(tabs)')}
+          onPress={() => router.replace('/(tabs)/home')}
         />
         <GButton
           title="View orders"

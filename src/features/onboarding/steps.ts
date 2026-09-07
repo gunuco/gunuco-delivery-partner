@@ -33,6 +33,14 @@ export const DOCUMENT_LABELS: Record<DocumentType, string> = {
   PROFILE_PHOTO: 'Profile Photo',
 };
 
+export const DOCUMENT_DESCRIPTIONS: Record<DocumentType, string> = {
+  DRIVING_LICENCE: 'Upload a clear photo of your valid driving licence.',
+  RC: 'Upload the registration certificate for your delivery vehicle.',
+  INSURANCE: 'Upload a valid vehicle insurance document.',
+  IDENTITY: 'Upload Aadhaar or another government-issued ID.',
+  PROFILE_PHOTO: 'Upload a clear face photo for verification.',
+};
+
 /** Documents required before marking DOCUMENTS step complete. */
 export const REQUIRED_DOCUMENT_TYPES: DocumentType[] = [
   'DRIVING_LICENCE',
@@ -54,7 +62,7 @@ export function stepIndexFromProgress(progress: OnboardingProgress | undefined):
   if (!progress) {
     return 0;
   }
-  const completed = new Set(progress.completedSteps);
+  const completed = new Set(progress.completedSteps ?? []);
   if (!completed.has('PERSONAL_DETAILS')) return 0;
   // Photo / location are UX steps after personal — treat as 1–2 until vehicle done
   if (!completed.has('VEHICLE')) {
@@ -72,7 +80,7 @@ export function nextIncompleteRoute(progress: OnboardingProgress | undefined): s
   if (!progress) {
     return '/(onboarding)/personal';
   }
-  const completed = new Set(progress.completedSteps);
+  const completed = new Set(progress.completedSteps ?? []);
   if (!completed.has('PERSONAL_DETAILS')) return '/(onboarding)/personal';
   if (!completed.has('VEHICLE')) return '/(onboarding)/photo';
   if (!completed.has('DOCUMENTS')) return '/(onboarding)/documents';

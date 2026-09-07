@@ -13,6 +13,8 @@ import {
   theme,
 } from '@/src/design-system';
 import type { IconName } from '@/src/design-system';
+import { StepBanner } from '@/src/features/onboarding/StepBanner';
+import { OnboardingHeader } from '@/src/features/onboarding/OnboardingHeader';
 import { useAuth, usePartner } from '@/src/hooks';
 import type { PartnerStatus } from '@/src/types';
 
@@ -79,30 +81,80 @@ export default function OnboardingStatusScreen() {
     return <Redirect href="/(onboarding)" />;
   }
 
-  const copy = COPY[partner.status];
+  const copy = COPY[partner.status as keyof typeof COPY];
+
+  if (!copy) {
+    return (
+      <View style={styles.flex}>
+        <GHeader title="Account status" />
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: insets.bottom + theme.spacing[8] },
+          ]}
+        >
+          <GCard padding="lg">
+            <GStatusBadge status={partner.status} kind="partner" />
+            <GText variant="h2" style={styles.title}>
+              Status unavailable
+            </GText>
+            <GText variant="body" color={theme.colors.textSecondary}>
+              We could not determine your account status. Pull to refresh or contact
+              support.
+            </GText>
+          </GCard>
+          <GButton
+            title="Refresh"
+            size="lg"
+            fullWidth
+            variant="outline"
+            onPress={() => {
+              void refetch();
+            }}
+          />
+        </ScrollView>
+      </View>
+    );
+  }
 
   const onCta = async () => {
     if (!copy.ctaRoute) return;
-    if (copy.ctaRoute === 'logout') {
-      await logout();
-      router.replace('/(auth)/login');
-      return;
+    try {
+      if (copy.ctaRoute === 'logout') {
+        await logout();
+        router.replace('/(auth)/login');
+        return;
+      }
+      router.push(copy.ctaRoute as never);
+    } catch {
+      // Keep screen stable if logout/navigation fails.
     }
-    router.push(copy.ctaRoute as never);
   };
 
   return (
     <View style={styles.flex}>
-      <GHeader title="Account status" />
+      <OnboardingHeader
+        title="Account status"
+        showBack
+        onBack={() => {
+          if (router.canGoBack()) {
+            router.back();
+            return;
+          }
+          router.replace('/(onboarding)');
+        }}
+      />
+
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: insets.bottom + theme.spacing[8] },
+          { paddingBottom: Math.max(insets.bottom, theme.spacing[4]) + theme.spacing[4] },
         ]}
+        showsVerticalScrollIndicator={false}
       >
-        <GCard padding="lg">
+        <GCard padding="lg" elevated style={styles.statusCard}>
           <View style={styles.iconWrap}>
-            <GIcon name={copy.icon} size={36} color={theme.colors.primary} />
+            <GIcon name={copy.icon} size={28} color={theme.colors.primary} />
           </View>
           <GStatusBadge status={partner.status} kind="partner" />
           <GText variant="h2" style={styles.title}>
@@ -126,6 +178,7 @@ export default function OnboardingStatusScreen() {
           onPress={() => {
             void refetch();
           }}
+          rightIcon={<GIcon name="refresh" size={18} color={theme.colors.primary} />}
         />
 
         {copy.cta ? (
@@ -138,13 +191,15 @@ export default function OnboardingStatusScreen() {
             }}
           />
         ) : null}
+
+        <StepBanner name="status" />
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: theme.colors.background },
+  flex: { flex: 1, backgroundColor: theme.colors.accentSoft },
   center: {
     flex: 1,
     alignItems: 'center',
@@ -156,15 +211,23 @@ const styles = StyleSheet.create({
     paddingTop: theme.spacing[4],
     gap: theme.spacing[3],
   },
+  statusCard: {
+    backgroundColor: theme.colors.surface,
+    gap: theme.spacing[2],
+  },
   iconWrap: {
-    width: 64,
-    height: 64,
+    width: 56,
+    height: 56,
     borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.surfaceMuted,
+    backgroundColor: theme.colors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: theme.spacing[3],
+    marginBottom: theme.spacing[1],
   },
-  title: { marginTop: theme.spacing[3], marginBottom: theme.spacing[2] },
-  code: { marginTop: theme.spacing[4] },
+  title: {
+    marginTop: theme.spacing[1],
+  },
+  code: {
+    marginTop: theme.spacing[2],
+  },
 });

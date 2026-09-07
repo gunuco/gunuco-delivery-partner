@@ -25,10 +25,18 @@ export const notificationsApi = baseApi.injectEndpoints({
       },
       invalidatesTags: ['Notifications'],
     }),
-    markAllNotificationsRead: build.mutation<void, void>({
+    markAllNotificationsRead: build.mutation<null, void>({
       async queryFn() {
         const result = await repositories.notifications.markAllRead();
-        return mapResult(result);
+        if (!result.ok) {
+          return {
+            error: {
+              status: 'CUSTOM_ERROR' as const,
+              error: result.error.userMessage,
+            },
+          };
+        }
+        return { data: null };
       },
       invalidatesTags: ['Notifications'],
     }),

@@ -79,9 +79,9 @@ export function GStepIndicator({ steps, currentIndex }: GStepIndicatorProps) {
             <GText
               variant="caption"
               center
-              color={active ? theme.colors.text : theme.colors.textMuted}
+              color={active || done ? theme.colors.primary : theme.colors.textMuted}
               numberOfLines={2}
-              style={styles.label}
+              style={[styles.label, (active || done) && styles.labelActive]}
             >
               {step}
             </GText>
@@ -109,20 +109,23 @@ const styles = StyleSheet.create({
   },
   line: {
     flex: 1,
-    height: 2,
+    height: 1.5,
   },
   lineSpacer: {
     flex: 1,
   },
   dot: {
-    width: 28,
-    height: 28,
+    width: 26,
+    height: 26,
     borderRadius: theme.radius.full,
-    borderWidth: 2,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
   label: {
-    paddingHorizontal: theme.spacing[1],
+    paddingHorizontal: 1,
+  },
+  labelActive: {
+    fontWeight: '700',
   },
 });

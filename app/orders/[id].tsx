@@ -3,15 +3,9 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 
 import {
-  GButton,
-  GCard,
   GEmptyState,
   GErrorState,
-  GHeader,
-  GListRow,
   GLoader,
-  GStatusBadge,
-  GStepIndicator,
   GText,
   theme,
   useToast,
@@ -28,20 +22,66 @@ import {
   getPrimaryActionLabel,
 } from '@/src/features/orders/deliveryRouting';
 import {
-  collectHandlingInstructions,
   formatAddress,
   formatDistanceKm,
   formatEtaMinutes,
   formatOrderEarnings,
   getItemsCount,
 } from '@/src/features/orders/orderFormat';
+import { OrderDetailsActions } from '@/src/features/orders/OrderDetailsActions';
+import { OrderDetailsTopBar } from '@/src/features/orders/OrderDetailsTopBar';
+import { OrderItemsCard } from '@/src/features/orders/OrderItemsCard';
+import { OrderLocationsCard } from '@/src/features/orders/OrderLocationsCard';
+import { OrderStatusBanner } from '@/src/features/orders/OrderStatusBanner';
+import { OrderTimelineScroll } from '@/src/features/orders/OrderTimelineScroll';
+import { buildOrderTimeline } from '@/src/features/orders/orderTimeline';
+import { TripSummaryCard } from '@/src/features/orders/TripSummaryCard';
 import { useOrder, useOrderActions } from '@/src/hooks';
 import { callPhone } from '@/src/services/linking';
 import { openExternalNavigation } from '@/src/services/navigation';
-import {
-  getNextPrimaryAction,
-  getOrderProgressSteps,
-} from '@/src/utils/orderWorkflow';
+import type { Order } from '@/src/types';
+import { formatShortDateTime, formatTime } from '@/src/utils/date';
+import { getNextPrimaryAction } from '@/src/utils/orderWorkflow';
+
+function buildTopBarSubtitle(order: Order): string {
+  if (order.status === 'DELIVERED') {
+    const when = order.deliveredAt ?? order.updatedAt;
+    return `Delivered on ${formatShortDateTime(when)}`;
+  }
+  if (order.status === 'FAILED') {
+    const when = order.failedAt ?? order.updatedAt;
+    return `Failed on ${formatShortDateTime(when)}`;
+  }
+  if (order.status === 'CANCELLED') {
+    return `Cancelled · ${formatShortDateTime(order.updatedAt)}`;
+  }
+  return ORDER_STATUS_META[order.status]?.title ?? order.status;
+}
+
+function buildBannerCopy(order: Order): { title: string; message: string } {
+  if (order.status === 'DELIVERED') {
+    return {
+      title: 'Delivered',
+      message: 'Order successfully delivered. Great job!',
+    };
+  }
+  const meta = ORDER_STATUS_META[order.status];
+  return {
+    title: meta?.title ?? order.status,
+    message: meta?.description ?? '',
+  };
+}
+
+function buildTripCaption(order: Order): string {
+  const count = getItemsCount(order);
+  if (order.status === 'DELIVERED' && order.deliveredAt) {
+    return `${count} items • Completed at ${formatTime(order.deliveredAt)}`;
+  }
+  if (order.status === 'FAILED' || order.status === 'CANCELLED') {
+    return `${count} items • ${ORDER_STATUS_META[order.status]?.title ?? order.status}`;
+  }
+  return `${count} items • ETA ${formatEtaMinutes(order.estimatedDurationMinutes)}`;
+}
 
 export default function OrderDetailsScreen() {
   const toast = useToast();
@@ -51,18 +91,12 @@ export default function OrderDetailsScreen() {
   const actions = useOrderActions();
   const [acting, setActing] = useState(false);
 
-  const steps = useMemo(
-    () => (order ? getOrderProgressSteps(order.status) : []),
+  const timeline = useMemo(
+    () => (order ? buildOrderTimeline(order) : []),
     [order],
   );
-  const stepLabels = steps.map((step) => step.label);
-  const currentIndex = Math.max(
-    0,
-    steps.findIndex((step) => step.current),
-  );
   const primary = order ? getNextPrimaryAction(order) : null;
-  const meta = order ? ORDER_STATUS_META[order.status] : null;
-  const handling = order ? collectHandlingInstructions(order.items) : [];
+  const banner = order ? buildBannerCopy(order) : null;
 
   const runPrimary = useCallback(async () => {
     if (!order || !primary) return;
@@ -131,32 +165,46 @@ export default function OrderDetailsScreen() {
     [order, toast],
   );
 
+  const openMap = useCallback(
+    async (target: 'pickup' | 'delivery') => {
+      if (!order) return;
+      const coords =
+        target === 'delivery'
+          ? order.delivery?.address?.coordinates
+          : order.pickup?.address?.coordinates;
+      if (!coords) {
+        toast.showToast({ type: 'warning', message: 'No coordinates available' });
+        return;
+      }
+      await openExternalNavigation({
+        lat: coords.latitude,
+        lng: coords.longitude,
+        label: target === 'delivery' ? order.customerName : order.pickup?.name,
+      });
+    },
+    [order, toast],
+  );
+
   const onNavigate = useCallback(async () => {
     if (!order) return;
-    const coords =
+    const toCustomer =
       order.status === 'GOING_TO_CUSTOMER' ||
       order.status === 'PICKED_UP' ||
-      order.status === 'ARRIVED_AT_CUSTOMER'
-        ? order.delivery.address.coordinates
-        : order.pickup.address.coordinates;
-    if (!coords) {
-      toast.showToast({ type: 'warning', message: 'No coordinates available' });
-      return;
-    }
-    await openExternalNavigation({
-      lat: coords.latitude,
-      lng: coords.longitude,
-      label:
-        order.status === 'GOING_TO_CUSTOMER' || order.status === 'PICKED_UP'
-          ? order.customerName
-          : order.pickup.name,
-    });
-  }, [order, toast]);
+      order.status === 'ARRIVED_AT_CUSTOMER' ||
+      order.status === 'DELIVERY_VERIFICATION' ||
+      order.status === 'DELIVERED';
+    await openMap(toCustomer ? 'delivery' : 'pickup');
+  }, [openMap, order]);
 
   if (isLoading) {
     return (
       <View style={styles.root}>
-        <GHeader title="Order" showBack onBack={() => router.back()} />
+        <OrderDetailsTopBar
+          orderNumber="…"
+          subtitle="Loading"
+          onBack={() => router.back()}
+          onSupport={() => router.push('/support')}
+        />
         <GLoader label="Loading order…" />
       </View>
     );
@@ -165,7 +213,12 @@ export default function OrderDetailsScreen() {
   if (error || !order) {
     return (
       <View style={styles.root}>
-        <GHeader title="Order" showBack onBack={() => router.back()} />
+        <OrderDetailsTopBar
+          orderNumber="Order"
+          subtitle="Unavailable"
+          onBack={() => router.back()}
+          onSupport={() => router.push('/support')}
+        />
         <GErrorState
           title="Order not found"
           onRetry={() => {
@@ -178,125 +231,85 @@ export default function OrderDetailsScreen() {
 
   return (
     <View style={styles.root}>
-      <GHeader
-        title={`#${order.orderNumber}`}
-        subtitle={meta?.title}
-        showBack
+      <OrderDetailsTopBar
+        orderNumber={order.orderNumber}
+        subtitle={buildTopBarSubtitle(order)}
         onBack={() => router.back()}
+        onSupport={() => router.push('/support')}
       />
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.statusRow}>
-          <GStatusBadge status={order.status} kind="order" />
-          <GText variant="caption" color={theme.colors.textSecondary}>
-            {meta?.description}
-          </GText>
-        </View>
 
-        <GStepIndicator steps={stepLabels} currentIndex={currentIndex} />
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {banner ? (
+          <OrderStatusBanner
+            status={order.status}
+            title={banner.title}
+            message={banner.message}
+          />
+        ) : null}
 
-        <GCard padding="md" style={styles.card}>
-          <GText variant="title">Trip</GText>
-          <GText variant="body">
-            {formatDistanceKm(order.distanceKm)} ·{' '}
-            {formatEtaMinutes(order.estimatedDurationMinutes)} ·{' '}
-            {formatOrderEarnings(order)}
-          </GText>
-          <GText variant="caption" color={theme.colors.textMuted}>
-            {getItemsCount(order)} items
-          </GText>
-        </GCard>
+        <OrderTimelineScroll points={timeline} />
 
-        <GCard padding="md" style={styles.card}>
-          <GText variant="title">Pickup</GText>
-          <GText variant="bodyBold">{order.pickup.name}</GText>
-          <GText variant="body" color={theme.colors.textSecondary}>
-            {formatAddress(order.pickup.address)}
-          </GText>
-          {order.pickup.instructions ? (
-            <GText variant="caption" color={theme.colors.textMuted}>
-              {order.pickup.instructions}
-            </GText>
-          ) : null}
-        </GCard>
+        <TripSummaryCard
+          distanceLabel={formatDistanceKm(order.distanceKm)}
+          durationLabel={formatEtaMinutes(order.estimatedDurationMinutes)}
+          earningsLabel={formatOrderEarnings(order)}
+          caption={buildTripCaption(order)}
+          onPressEarnings={() => router.push(`/earnings/delivery/${order.id}`)}
+        />
 
-        <GCard padding="md" style={styles.card}>
-          <GText variant="title">Customer</GText>
-          <GText variant="bodyBold">{order.customerName}</GText>
-          <GText variant="body" color={theme.colors.textSecondary}>
-            {formatAddress(order.delivery.address)}
-          </GText>
-          {order.delivery.instructions ? (
-            <GText variant="caption" color={theme.colors.textMuted}>
-              {order.delivery.instructions}
-            </GText>
-          ) : null}
-        </GCard>
+        <OrderLocationsCard
+          pickupName={order.pickup?.name ?? 'Pickup'}
+          pickupAddress={formatAddress(order.pickup?.address)}
+          pickupInstructions={order.pickup?.instructions}
+          customerName={order.customerName}
+          deliveryAddress={formatAddress(order.delivery?.address)}
+          deliveryInstructions={order.delivery?.instructions}
+          onOpenPickupMap={() => {
+            void openMap('pickup');
+          }}
+          onOpenDeliveryMap={() => {
+            void openMap('delivery');
+          }}
+        />
 
-        <GCard padding="md" style={styles.card}>
-          <GText variant="title">Items</GText>
-          {order.items.map((item) => (
-            <GListRow
-              key={item.id}
-              title={`${item.quantity}× ${item.name}`}
-              subtitle={item.handlingInstructions.join(' · ') || undefined}
-            />
-          ))}
-          {handling.length === 0 ? (
-            <GEmptyState title="No special handling" />
-          ) : null}
-        </GCard>
+        <OrderItemsCard items={order.items ?? []} itemsCount={getItemsCount(order)} />
 
         {order.specialInstructions ? (
-          <GCard padding="md" style={styles.card}>
-            <GText variant="title">Special instructions</GText>
-            <GText variant="body">{order.specialInstructions}</GText>
-          </GCard>
+          <View style={styles.specialCard}>
+            <GText variant="bodyBold">Special instructions</GText>
+            <GText variant="body" color={theme.colors.textSecondary}>
+              {order.specialInstructions}
+            </GText>
+          </View>
         ) : null}
 
-        <View style={styles.contactRow}>
-          <GButton
-            title="Call customer"
-            variant="secondary"
-            onPress={() => {
-              void onCall('CALL_CUSTOMER');
-            }}
-            style={styles.flex}
-          />
-          <GButton
-            title="Navigate"
-            variant="outline"
-            onPress={() => {
-              void onNavigate();
-            }}
-            style={styles.flex}
-          />
-        </View>
-
-        {primary ? (
-          <GButton
-            title={getPrimaryActionLabel(primary)}
-            size="lg"
-            fullWidth
-            loading={acting || actions.isActing}
-            onPress={() => {
-              void runPrimary();
-            }}
-          />
+        {(order.items ?? []).length === 0 ? (
+          <GEmptyState title="No items on this order" />
         ) : null}
-
-        <GButton
-          title="Open delivery hub"
-          variant="ghost"
-          fullWidth
-          onPress={() => router.push(deliveryHubHref(order.id))}
-        />
-        <GButton
-          title="Report issue"
-          variant="danger"
-          fullWidth
-          onPress={() => router.push(deliveryFailHref(order.id))}
-        />
       </ScrollView>
+
+      <OrderDetailsActions
+        primaryLabel={primary ? getPrimaryActionLabel(primary) : null}
+        primaryLoading={acting || actions.isActing}
+        onPrimary={
+          primary
+            ? () => {
+                void runPrimary();
+              }
+            : undefined
+        }
+        onCallCustomer={() => {
+          void onCall('CALL_CUSTOMER');
+        }}
+        onNavigate={() => {
+          void onNavigate();
+        }}
+        onOpenHub={() => router.push(deliveryHubHref(order.id))}
+        onReportIssue={() => router.push(deliveryFailHref(order.id))}
+      />
     </View>
   );
 }
@@ -307,21 +320,17 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   content: {
-    padding: theme.spacing[4],
+    paddingHorizontal: theme.spacing[4],
+    paddingBottom: theme.spacing[6],
     gap: theme.spacing[4],
-    paddingBottom: theme.spacing[10],
   },
-  statusRow: {
+  specialCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: theme.colors.border,
+    padding: theme.spacing[4],
     gap: theme.spacing[2],
-  },
-  card: {
-    gap: theme.spacing[2],
-  },
-  contactRow: {
-    flexDirection: 'row',
-    gap: theme.spacing[2],
-  },
-  flex: {
-    flex: 1,
+    ...theme.shadows.sm,
   },
 });

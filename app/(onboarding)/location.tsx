@@ -1,19 +1,12 @@
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  GButton,
-  GCard,
-  GHeader,
-  GIcon,
-  GStepIndicator,
-  GText,
-  theme,
-  useToast,
-} from '@/src/design-system';
+import { GButton, GIcon, GStepIndicator, GText, theme, useToast } from '@/src/design-system';
+import { OnboardingHeader } from '@/src/features/onboarding/OnboardingHeader';
+import { StepBanner } from '@/src/features/onboarding/StepBanner';
 import { ONBOARDING_UI_STEPS } from '@/src/features/onboarding/steps';
 
 export default function LocationPermissionScreen() {
@@ -23,10 +16,13 @@ export default function LocationPermissionScreen() {
   const [loading, setLoading] = useState(false);
   const [granted, setGranted] = useState(false);
 
+  const footerPad = useMemo(() => Math.max(insets.bottom, theme.spacing[3]) + 160, [insets.bottom]);
+
   const requestPermission = async () => {
     setLoading(true);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      const result = await Location.requestForegroundPermissionsAsync();
+      const status = result?.status;
       if (status !== 'granted') {
         showToast({
           type: 'warning',
@@ -39,6 +35,7 @@ export default function LocationPermissionScreen() {
       showToast({ type: 'success', message: 'Location access enabled' });
     } catch {
       showToast({ type: 'error', message: 'Could not request location permission' });
+      setGranted(false);
     } finally {
       setLoading(false);
     }
@@ -46,33 +43,18 @@ export default function LocationPermissionScreen() {
 
   return (
     <View style={styles.flex}>
-      <GHeader title="Location access" showBack onBack={() => router.back()} />
+      <OnboardingHeader title="Location access" />
+
       <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingBottom: insets.bottom + theme.spacing[8] },
-        ]}
+        contentContainerStyle={[styles.content, { paddingBottom: footerPad }]}
+        showsVerticalScrollIndicator={false}
       >
         <GStepIndicator steps={[...ONBOARDING_UI_STEPS]} currentIndex={2} />
 
-        <GCard padding="lg">
-          <View style={styles.iconWrap}>
-            <GIcon name="location" size={36} color={theme.colors.primary} />
-          </View>
-          <GText variant="h3" style={styles.title}>
-            Why we need your location
-          </GText>
-          <GText variant="body" color={theme.colors.textSecondary}>
-            GUNUCO uses your live location to assign nearby cake orders, guide you to
-            hubs and customers, and keep delivery ETAs accurate.
-          </GText>
-          <View style={styles.bullets}>
-            <GText variant="body">• Foreground location while you are online</GText>
-            <GText variant="body">• Never shared for marketing</GText>
-            <GText variant="body">• You can go offline anytime</GText>
-          </View>
-        </GCard>
+        <StepBanner name="location" />
+      </ScrollView>
 
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, theme.spacing[3]) }]}>
         <GButton
           title={granted ? 'Location enabled' : 'Allow location access'}
           size="lg"
@@ -82,15 +64,33 @@ export default function LocationPermissionScreen() {
           onPress={() => {
             void requestPermission();
           }}
+          leftIcon={<GIcon name="location" size={20} color={theme.colors.textInverse} />}
+          rightIcon={
+            granted ? undefined : (
+              <GIcon name="arrowForward" size={20} color={theme.colors.textInverse} />
+            )
+          }
         />
         <GButton
           title="Continue"
           size="lg"
           fullWidth
-          variant={granted ? 'primary' : 'outline'}
+          variant="outline"
           onPress={() => router.push('/(onboarding)/vehicle')}
         />
-      </ScrollView>
+
+        <View style={styles.privacyRow}>
+          <GIcon name="lock" size={20} color={theme.colors.textMuted} />
+          <View>
+            <GText variant="caption" color={theme.colors.textMuted} style={styles.privacyText}>
+              Your location is secure with GUNUCO.
+            </GText>
+            <GText variant="caption" color={theme.colors.textMuted} style={styles.privacyText}>
+              We never share it for marketing purposes.
+            </GText>
+          </View>
+        </View>
+      </View>
     </View>
   );
 }
@@ -100,17 +100,31 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: theme.spacing[4],
     paddingTop: theme.spacing[4],
-    gap: theme.spacing[4],
+    gap: theme.spacing[3],
   },
-  iconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.surfaceMuted,
+  footer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 100,
+    paddingHorizontal: theme.spacing[4],
+    paddingTop: theme.spacing[3],
+    gap: theme.spacing[2],
+    backgroundColor: theme.colors.background,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: theme.colors.border,
+  },
+  privacyRow: {
+    width: '100%',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: theme.spacing[3],
+    gap: theme.spacing[2],
+    paddingTop: theme.spacing[5],
+    paddingLeft: theme.spacing[11],
+    paddingRight: theme.spacing[10],
   },
-  title: { marginBottom: theme.spacing[2] },
-  bullets: { marginTop: theme.spacing[4], gap: theme.spacing[2] },
+  privacyText: {
+    fontWeight: '500',
+    flex: 1,
+  },
 });

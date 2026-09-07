@@ -22,6 +22,7 @@ export type GButtonProps = Omit<PressableProps, 'children'> & {
   loading?: boolean;
   fullWidth?: boolean;
   leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
   onPress?: () => void;
 };
 
@@ -75,6 +76,7 @@ export function GButton({
   disabled = false,
   fullWidth = false,
   leftIcon,
+  rightIcon,
   onPress,
   style,
   ...rest
@@ -113,6 +115,7 @@ export function GButton({
           <GText variant="button" color={v.text}>
             {title}
           </GText>
+          {rightIcon ? <View style={styles.iconRight}>{rightIcon}</View> : null}
         </View>
       )}
     </Pressable>
@@ -134,5 +137,8 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginRight: theme.spacing[1],
+  },
+  iconRight: {
+    marginLeft: theme.spacing[1],
   },
 });

@@ -42,10 +42,19 @@ export const authApi = baseApi.injectEndpoints({
         return mapResult(result);
       },
     }),
-    logout: build.mutation<void, void>({
+    logout: build.mutation<null, void>({
       async queryFn() {
         const result = await repositories.auth.logout();
-        return mapResult(result);
+        if (!result.ok) {
+          return {
+            error: {
+              status: 'CUSTOM_ERROR' as const,
+              error: result.error.userMessage,
+            },
+          };
+        }
+        // RTK Query rejects `{ data: undefined }` — use null for void success.
+        return { data: null };
       },
       async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
         try {

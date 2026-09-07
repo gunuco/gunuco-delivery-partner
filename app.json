@@ -20,7 +20,7 @@
     "android": {
       "package": "com.gunuco.deliverypartner",
       "adaptiveIcon": {
-        "backgroundColor": "#5C3A21",
+        "backgroundColor": "#6B001D",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -45,7 +45,7 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#5C3A21"
+          "backgroundColor": "#6B001D"
         }
       ],
       "expo-secure-store",

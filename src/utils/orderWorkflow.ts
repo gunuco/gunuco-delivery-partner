@@ -10,7 +10,7 @@ const PROGRESS_STEPS: { key: OrderStatus; label: string }[] = [
   { key: 'PICKED_UP', label: 'Picked up' },
   { key: 'GOING_TO_CUSTOMER', label: 'To customer' },
   { key: 'ARRIVED_AT_CUSTOMER', label: 'At customer' },
-  { key: 'DELIVERY_VERIFICATION', label: 'Verify' },
+  { key: 'DELIVERY_VERIFICATION', label: 'Verified' },
   { key: 'DELIVERED', label: 'Delivered' },
 ];
 
@@ -51,14 +51,14 @@ export interface OrderProgressStep {
 }
 
 export function getAvailableOrderActions(order: Order): OrderAction[] {
-  return [...ORDER_STATUS_META[order.status].allowedActions];
+  return [...(ORDER_STATUS_META[order.status]?.allowedActions ?? [])];
 }
 
 export function canTransition(from: OrderStatus, to: OrderStatus): boolean {
   if (from === to) {
     return false;
   }
-  return ALLOWED_TRANSITIONS[from].includes(to);
+  return (ALLOWED_TRANSITIONS[from] ?? []).includes(to);
 }
 
 export function getNextPrimaryAction(order: Order): OrderAction | null {

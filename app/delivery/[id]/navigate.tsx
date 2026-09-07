@@ -48,14 +48,14 @@ export default function NavigateScreen() {
     if (toCustomer) {
       return {
         label: order.customerName,
-        address: formatAddress(order.delivery.address),
-        coordinates: order.delivery.address.coordinates,
+        address: formatAddress(order.delivery?.address),
+        coordinates: order.delivery?.address?.coordinates,
       };
     }
     return {
-      label: order.pickup.name,
-      address: formatAddress(order.pickup.address),
-      coordinates: order.pickup.address.coordinates,
+      label: order.pickup?.name ?? 'Pickup',
+      address: formatAddress(order.pickup?.address),
+      coordinates: order.pickup?.address?.coordinates,
     };
   }, [order, toCustomer]);
 

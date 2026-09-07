@@ -1,64 +1,74 @@
 /**
  * GUNUCO Delivery Partner color tokens.
- * Warm cocoa primary, soft rose-gold accent — professional rider-app palette.
+ * Brand maroon + soft pink surfaces matching the Delivery Partner UI.
  */
 export const colors = {
-  primary: '#5C3A21',
-  primaryDark: '#3E2615',
-  primaryLight: '#8B5E3C',
+  primary: '#6B001D',
+  primaryDark: '#4A0014',
+  primaryLight: '#8F1A3A',
   accent: '#C45C6A',
-  success: '#1B7A4E',
-  warning: '#C47B1A',
-  danger: '#C62828',
-  info: '#2F6FED',
+  accentSoft: '#FCE8ED',
+  accentMuted: '#F8E4E9',
+  success: '#16A34A',
+  successSoft: '#E8F8EE',
+  warning: '#EA8C00',
+  warningSoft: '#FFF4E0',
+  danger: '#E11D48',
+  dangerSoft: '#FDE8EC',
+  info: '#2563EB',
+  infoSoft: '#E8F0FE',
+  purpleSoft: '#F0E8FA',
+  orangeSoft: '#FFF1E6',
 
-  background: '#FBF7F2',
+  background: '#F5F5F7',
   surface: '#FFFFFF',
-  surfaceMuted: '#F5EDE3',
+  surfaceMuted: '#F8F0F2',
 
-  text: '#1A1410',
-  textSecondary: '#6B5E54',
+  text: '#111111',
+  textSecondary: '#6B7280',
   textInverse: '#FFFFFF',
-  textMuted: '#9A8B7E',
+  textMuted: '#9CA3AF',
 
-  border: '#E8DDD2',
-  borderStrong: '#D4C4B5',
+  border: '#ECECF0',
+  borderStrong: '#D8D8DE',
 
-  online: '#1B7A4E',
-  offline: '#8A8178',
+  online: '#16A34A',
+  offline: '#9CA3AF',
 
-  overlay: 'rgba(26, 20, 16, 0.48)',
-  skeleton: '#EDE4DA',
+  overlay: 'rgba(17, 17, 17, 0.45)',
+  skeleton: '#EAEAEF',
 
   white: '#FFFFFF',
   black: '#000000',
   transparent: 'transparent',
 
+  brandWash: 'rgba(107, 0, 29, 0.04)',
+
   /** Order lifecycle status colors */
   status: {
-    pending: '#C47B1A',
-    assigned: '#2F6FED',
-    accepted: '#2F6FED',
-    arriving_store: '#8B5E3C',
-    picked_up: '#5C3A21',
+    pending: '#EA8C00',
+    assigned: '#2563EB',
+    accepted: '#2563EB',
+    arriving_store: '#8F1A3A',
+    picked_up: '#6B001D',
     in_transit: '#C45C6A',
     arriving_customer: '#C45C6A',
-    delivered: '#1B7A4E',
-    completed: '#1B7A4E',
-    cancelled: '#C62828',
-    rejected: '#C62828',
-    failed: '#C62828',
+    delivered: '#16A34A',
+    completed: '#16A34A',
+    cancelled: '#E11D48',
+    rejected: '#E11D48',
+    failed: '#E11D48',
   },
 
   /** Partner availability / account status */
   partnerStatus: {
-    online: '#1B7A4E',
-    offline: '#8A8178',
-    busy: '#C47B1A',
-    on_delivery: '#2F6FED',
-    suspended: '#C62828',
-    pending_verification: '#C47B1A',
-    verified: '#1B7A4E',
+    online: '#16A34A',
+    offline: '#9CA3AF',
+    busy: '#EA8C00',
+    on_delivery: '#2563EB',
+    suspended: '#E11D48',
+    pending_verification: '#EA8C00',
+    verified: '#16A34A',
   },
 } as const;
 

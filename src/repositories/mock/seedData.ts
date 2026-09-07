@@ -63,7 +63,8 @@ export function createSeedPartner(overrides: Partial<Partner> = {}): Partner {
     phone: SEED_PARTNER_PHONE,
     name: 'Keshava Reddy',
     email: 'keshava.reddy@gunuco.partner',
-    photoUrl: undefined,
+    photoUrl:
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face',
     hubId: 'hub_jubilee_hills',
     hubName: 'GUNUCO Jubilee Hills',
     status: 'APPROVED',
@@ -215,6 +216,8 @@ export function createSeedOrders(partnerId: string): Order[] {
         name: 'Belgian Chocolate Truffle Cake',
         quantity: 1,
         unitPricePaise: 189900,
+        imageUrl:
+          'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=200&h=200&fit=crop',
         handlingInstructions: ['KEEP UPRIGHT', 'DO NOT TILT', 'HANDLE WITH CARE'],
         isFragile: true,
         isMultiTier: true,
@@ -268,6 +271,8 @@ export function createSeedOrders(partnerId: string): Order[] {
         name: 'Red Velvet Brownie Box',
         quantity: 2,
         unitPricePaise: 69900,
+        imageUrl:
+          'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=200&h=200&fit=crop',
         handlingInstructions: ['KEEP FLAT', 'AVOID HEAT'],
         isFragile: true,
         requiresRefrigeration: false,
@@ -277,13 +282,13 @@ export function createSeedOrders(partnerId: string): Order[] {
     estimatedEarningsPaise: 7200,
     distanceKm: 6.1,
     estimatedDurationMinutes: 28,
-    assignedAt: isoDaysAgo(1, 16, 10),
-    acceptedAt: isoDaysAgo(1, 16, 11),
-    pickedUpAt: isoDaysAgo(1, 16, 28),
-    deliveredAt: isoDaysAgo(1, 17, 5),
+    assignedAt: isoDaysAgo(0, 10, 2),
+    acceptedAt: isoDaysAgo(0, 10, 3),
+    pickedUpAt: isoDaysAgo(0, 10, 32),
+    deliveredAt: isoDaysAgo(0, 11, 24),
     verificationMethod: 'OTP',
-    createdAt: isoDaysAgo(1, 16, 5),
-    updatedAt: isoDaysAgo(1, 17, 5),
+    createdAt: isoDaysAgo(0, 10, 0),
+    updatedAt: isoDaysAgo(0, 11, 24),
   };
 
   const deliveredFilmNagar: Order = {
@@ -312,6 +317,8 @@ export function createSeedOrders(partnerId: string): Order[] {
         name: 'Opera Cake Slice Box',
         quantity: 4,
         unitPricePaise: 29900,
+        imageUrl:
+          'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=200&h=200&fit=crop',
         handlingInstructions: ['KEEP UPRIGHT', 'REFRIGERATE IF DELAYED'],
         isFragile: true,
         requiresRefrigeration: true,
@@ -356,6 +363,8 @@ export function createSeedOrders(partnerId: string): Order[] {
         name: 'Dark Chocolate Mousse Cake',
         quantity: 1,
         unitPricePaise: 159900,
+        imageUrl:
+          'https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=200&h=200&fit=crop',
         handlingInstructions: ['KEEP UPRIGHT', 'DO NOT TILT', 'COLD CHAIN'],
         isFragile: true,
         isMultiTier: false,

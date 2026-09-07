@@ -129,10 +129,10 @@ export default function OrderAssignmentScreen() {
               ) : null}
             </View>
             <GText variant="body" color={theme.colors.textSecondary}>
-              Pickup · {order.pickup.name}
+              Pickup · {order.pickup?.name ?? 'Pickup'}
             </GText>
             <GText variant="caption" color={theme.colors.textMuted}>
-              {formatAddress(order.pickup.address)}
+              {formatAddress(order.pickup?.address)}
             </GText>
             <GText variant="bodyBold" style={styles.gap}>
               Customer area · {order.customerArea}

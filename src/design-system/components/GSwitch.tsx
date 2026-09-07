@@ -35,9 +35,9 @@ export function GSwitch({
         disabled={disabled}
         trackColor={{
           false: theme.colors.borderStrong,
-          true: theme.colors.primaryLight,
+          true: theme.colors.online,
         }}
-        thumbColor={value ? theme.colors.primary : theme.colors.surface}
+        thumbColor={theme.colors.white}
         ios_backgroundColor={theme.colors.borderStrong}
       />
     </View>

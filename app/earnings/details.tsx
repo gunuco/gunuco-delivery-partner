@@ -21,13 +21,15 @@ export default function EarningsDetailsScreen() {
 
   const totals = history.reduce(
     (acc, item) => {
-      acc.base += item.breakdown.basePaise;
-      acc.distance += item.breakdown.distancePaise;
-      acc.surge += item.breakdown.surgePaise;
-      acc.incentive += item.breakdown.incentivePaise;
-      acc.adjustments += item.breakdown.adjustmentsPaise;
-      acc.deductions += item.breakdown.deductionsPaise;
-      acc.net += item.breakdown.netPaise;
+      const breakdown = item.breakdown;
+      if (!breakdown) return acc;
+      acc.base += breakdown.basePaise ?? 0;
+      acc.distance += breakdown.distancePaise ?? 0;
+      acc.surge += breakdown.surgePaise ?? 0;
+      acc.incentive += breakdown.incentivePaise ?? 0;
+      acc.adjustments += breakdown.adjustmentsPaise ?? 0;
+      acc.deductions += breakdown.deductionsPaise ?? 0;
+      acc.net += breakdown.netPaise ?? 0;
       return acc;
     },
     {

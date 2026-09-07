@@ -2,7 +2,7 @@ import { theme, type OrderStatusColorKey, type PartnerStatusColorKey } from '../
 import { GBadge, type GBadgeTone } from './GBadge';
 
 export type GStatusBadgeProps = {
-  status: string;
+  status?: string | null;
   kind?: 'order' | 'partner';
   label?: string;
 };
@@ -35,7 +35,8 @@ function toneFromColor(hex: string): GBadgeTone {
 }
 
 export function GStatusBadge({ status, kind = 'order', label }: GStatusBadgeProps) {
-  const key = status.toLowerCase().replace(/\s+/g, '_');
+  const safeStatus = status ?? '';
+  const key = safeStatus.toLowerCase().replace(/\s+/g, '_');
   let color: string = theme.colors.textSecondary;
 
   if (kind === 'order' && key in theme.colors.status) {
@@ -44,5 +45,10 @@ export function GStatusBadge({ status, kind = 'order', label }: GStatusBadgeProp
     color = theme.colors.partnerStatus[key as PartnerStatusColorKey];
   }
 
-  return <GBadge label={label ?? formatLabel(status)} tone={toneFromColor(color)} />;
+  return (
+    <GBadge
+      label={label ?? (safeStatus ? formatLabel(safeStatus) : 'Unknown')}
+      tone={toneFromColor(color)}
+    />
+  );
 }

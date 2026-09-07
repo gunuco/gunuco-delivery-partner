@@ -22,8 +22,8 @@ export function isOnboardingIncomplete(progress: OnboardingProgress | undefined)
   if (!progress) {
     return true;
   }
-  const required = progress.requiredSteps.filter((s) => s !== 'SUBMITTED');
-  return required.some((step) => !progress.completedSteps.includes(step));
+  const required = (progress.requiredSteps ?? []).filter((s) => s !== 'SUBMITTED');
+  return required.some((step) => !(progress.completedSteps ?? []).includes(step));
 }
 
 export function needsOnboardingGate(

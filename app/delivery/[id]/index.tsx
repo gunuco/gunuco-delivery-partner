@@ -117,8 +117,8 @@ export default function DeliveryHubScreen() {
       order.status === 'ARRIVED_AT_CUSTOMER' ||
       order.status === 'DELIVERY_VERIFICATION';
     const coords = toCustomer
-      ? order.delivery.address.coordinates
-      : order.pickup.address.coordinates;
+      ? order.delivery?.address?.coordinates
+      : order.pickup?.address?.coordinates;
     if (!coords) {
       toast.showToast({ type: 'warning', message: 'No map coordinates' });
       return;
@@ -126,7 +126,7 @@ export default function DeliveryHubScreen() {
     await openExternalNavigation({
       lat: coords.latitude,
       lng: coords.longitude,
-      label: toCustomer ? order.customerName : order.pickup.name,
+      label: toCustomer ? order.customerName : order.pickup?.name,
     });
   }, [order, toast]);
 
@@ -185,15 +185,15 @@ export default function DeliveryHubScreen() {
             order.status === 'ARRIVED_AT_CUSTOMER' ||
             order.status === 'DELIVERY_VERIFICATION'
               ? order.customerName
-              : order.pickup.name}
+              : order.pickup?.name ?? 'Pickup'}
           </GText>
           <GText variant="body" color={theme.colors.textSecondary}>
             {order.status === 'PICKED_UP' ||
             order.status === 'GOING_TO_CUSTOMER' ||
             order.status === 'ARRIVED_AT_CUSTOMER' ||
             order.status === 'DELIVERY_VERIFICATION'
-              ? formatAddress(order.delivery.address)
-              : formatAddress(order.pickup.address)}
+              ? formatAddress(order.delivery?.address)
+              : formatAddress(order.pickup?.address)}
           </GText>
           <GText variant="caption" color={theme.colors.textMuted}>
             {formatDistanceKm(order.distanceKm)} ·{' '}
